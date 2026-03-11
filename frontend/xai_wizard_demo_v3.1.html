@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAI Wizard - Full Demo (v3.1)</title>
+    <!--
+      CSS 분리 관리 시: <link rel="stylesheet" href="xai_wizard.css">
+      standalone 데모용: 아래 <style> 태그 사용
+    -->
+    <style>
+/* ============================================================
+   XAI Wizard v3.1 — Stylesheet
+   파일: xai_wizard.css
+   설명: 메인 레이아웃, 사이드바, 데이터 테이블, 우측 패널,
+         폼 요소, 툴팁, 로그, 공통 유틸 등
+   ============================================================ */
+
+
+/* ----------------------------------------------------------
+   0. Reset & Base
+   ---------------------------------------------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+    background: #f0f2f5;
+    color: #333;
+    height: 100vh;
+    overflow: hidden;
+}
+
+
+/* ----------------------------------------------------------
+   1. Grid Layout
+   ---------------------------------------------------------- */
+.workspace-container {
+    display: grid;
+    grid-template-columns: 260px 1fr 340px;
+    grid-template-rows: 56px 1fr;
+    height: 100vh;
+    width: 100vw;
+}
+
+
+/* ----------------------------------------------------------
+   2. Header
+   ---------------------------------------------------------- */
+.header {
+    grid-column: 1 / -1;
+    background: #2c3e50;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.brand {
+    font-size: 1.15rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.project-info-container {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 5px 15px;
+    border-radius: 20px;
+}
+
+.project-title {
+    font-size: 0.95rem;
+    margin-right: 10px;
+}
+
+.edit-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.edit-btn:hover {
+    color: #fff;
+}
+
+
+/* ----------------------------------------------------------
+   3. Sidebar
+   ---------------------------------------------------------- */
+.sidebar {
+    background: #fff;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.accordion-item {
+    border-bottom: 1px solid #eee;
+}
+
+.accordion-header {
+    padding: 13px 18px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #2c3e50;
+    background: #f8f9fa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+    font-size: 0.92rem;
+}
+
+.accordion-header:hover {
+    background: #e9ecef;
+}
+
+.accordion-header.active {
+    background: #3498db;
+    color: #fff;
+}
+
+.accordion-body {
+    display: none;
+    background: #fff;
+    padding: 8px;
+}
+
+.accordion-body.open {
+    display: block;
+}
+
+/* 사이드바 내부 폼 (데이터 관리 영역) */
+.sidebar-form {
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 0.88rem;
+}
+
+.sidebar-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #555;
+    font-size: 0.83rem;
+}
+
+.sidebar-input,
+.sidebar-select {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.sidebar-btn {
+    width: 100%;
+    padding: 7px;
+    background: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.83rem;
+}
+
+.sidebar-btn:hover {
+    background: #2980b9;
+}
+
+/* 메뉴 버튼 */
+.menu-btn {
+    display: block;
+    width: 100%;
+    padding: 9px 10px 9px 15px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    color: #555;
+    font-size: 0.87rem;
+    transition: all 0.2s;
+    border-radius: 4px;
+}
+
+.menu-btn:hover {
+    background: #e8f4fc;
+    color: #3498db;
+}
+
+.menu-btn.active-func {
+    background: #e8f4fc;
+    color: #3498db;
+    font-weight: 700;
+    border-left: 3px solid #3498db;
+}
+
+
+/* ----------------------------------------------------------
+   4. Main Content & Data Table
+   ---------------------------------------------------------- */
+.main-content {
+    background: #edf2f7;
+    padding: 15px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-box {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    font-weight: 700;
+    color: #2c3e50;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.92rem;
+}
+
+.data-grid-container {
+    flex: 1;
+    overflow: auto;
+}
+
+table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+table.data-table th,
+table.data-table td {
+    padding: 8px 10px;
+    border: 1px solid #eee;
+    text-align: left;
+    white-space: nowrap;
+}
+
+table.data-table th {
+    background: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    font-size: 0.83rem;
+}
+
+
+/* ----------------------------------------------------------
+   5. Right Panel (Control + Log)
+   ---------------------------------------------------------- */
+.right-panel {
+    background: #fff;
+    border-left: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+}
+
+.control-panel {
+    flex: 1;
+    border-bottom: 2px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.control-header {
+    padding: 12px 15px;
+    background: #34495e;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.control-body {
+    padding: 15px;
+}
+
+/* 실행 로그 */
+.result-panel {
+    flex: 0 0 200px;
+    background: #1e272e;
+    color: #00ff88;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.82em;
+}
+
+.result-header {
+    padding: 8px 15px;
+    background: #111;
+    color: #fff;
+    border-bottom: 1px solid #333;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+
+/* ----------------------------------------------------------
+   6. Form Controls (우측 패널 내부)
+   ---------------------------------------------------------- */
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.form-select,
+.form-input {
+    width: 100%;
+    padding: 7px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.btn-action {
+    width: 100%;
+    padding: 10px;
+    background: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+    font-size: 0.9rem;
+}
+
+.btn-action:hover {
+    background: #2980b9;
+}
+
+.btn-danger {
+    background: #e74c3c;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.btn-success {
+    background: #27ae60;
+}
+
+.btn-success:hover {
+    background: #229954;
+}
+
+/* 변수 체크박스 리스트 */
+.var-list {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 130px;
+    overflow-y: auto;
+    padding: 4px;
+    background: #fafafa;
+}
+
+.var-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.var-item:hover {
+    background: #eee;
+}
+
+.var-item input {
+    margin-right: 6px;
+}
+
+/* 빈 상태 메시지 */
+.empty-state {
+    text-align: center;
+    color: #aaa;
+    padding: 40px 20px;
+    font-size: 0.9rem;
+}
+
+
+/* ----------------------------------------------------------
+   7. Info / Warning Boxes
+   ---------------------------------------------------------- */
+.info-box {
+    background: #eaf6ff;
+    border: 1px solid #b8daff;
+    border-radius: 4px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    font-size: 0.83rem;
+    color: #004085;
+}
+
+.warn-box {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    font-size: 0.83rem;
+    color: #856404;
+}
+
+
+/* ----------------------------------------------------------
+   8. Log Items
+   ---------------------------------------------------------- */
+.log-item {
+    padding: 6px 12px;
+    border-bottom: 1px solid #333;
+    font-size: 0.82rem;
+}
+
+.log-time {
+    color: #888;
+    font-size: 0.78em;
+    margin-right: 8px;
+}
+
+.log-success { color: #00ff88; }
+.log-info    { color: #3498db; }
+.log-warn    { color: #f39c12; }
+
+
+/* ----------------------------------------------------------
+   9. ⓘ Tooltip
+   - 아이콘에 호버하면 오른쪽에 가로로 펼쳐지는 말풍선
+   - 화면 오른쪽 끝에 잘릴 경우를 대비해 왼쪽 폴백 포함
+   ---------------------------------------------------------- */
+.tip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #bdc3c7;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: help;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+/* 툴팁 본체 — 아이콘 아래쪽에 표시 */
+.tip:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2c3e50;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 400;
+    width: 240px;
+    white-space: normal;
+    line-height: 1.45;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    text-align: left;
+    word-break: keep-all;
+}
+
+/* 화살표 — 위쪽 방향 */
+.tip:hover::before {
+    content: '';
+    position: absolute;
+    top: calc(100% + 3px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-bottom-color: #2c3e50;
+    z-index: 9999;
+}
+
+
+/* ----------------------------------------------------------
+   10. Badge (성능 평가 라벨)
+   ---------------------------------------------------------- */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.bg { background: #d4edda; color: #155724; }   /* good  */
+.bw { background: #fff3cd; color: #856404; }   /* warn  */
+.bb { background: #f8d7da; color: #721c24; }   /* bad   */
+    </style>
+</head>
+<body>
+<div class="workspace-container">
+    <header class="header">
+        <div class="brand"><span>🧙 XAI Wizard</span></div>
+        <div class="project-info-container">
+            📂 프로젝트:&nbsp;
+            <span id="project-name" class="project-title">고객 이탈 분석</span>
+            <button class="edit-btn" onclick="editProjectName()" title="이름 수정">✎</button>
+        </div>
+        <div><span style="font-size:.88rem">8급 홍길동</span></div>
+    </header>
+
+    <nav class="sidebar">
+        <div class="accordion-item">
+            <div class="accordion-header active" onclick="toggleAccordion(this,'data')">
+                데이터 관리 <span class="arrow">▼</span>
+            </div>
+            <div class="accordion-body open" id="group-data">
+                <div class="sidebar-form">
+                    <label class="sidebar-label">로컬 파일 (.xlsx, .csv)</label>
+                    <input type="file" id="fileInput" class="sidebar-input"
+                           onchange="previewFile()" accept=".csv,.xlsx,.xls">
+                    <button class="sidebar-btn" onclick="simulateUpload()">데이터 로드</button>
+                </div>
+                <div class="sidebar-form" style="border-top:2px dashed #eee">
+                    <label class="sidebar-label">피처 스토어</label>
+                    <button class="sidebar-btn" style="background:#2ecc71"
+                            onclick="openFeatureStorePopup()">목록 불러오기</button>
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this,'preprocess')">
+                전처리 <span class="arrow">▶</span>
+            </div>
+            <div class="accordion-body" id="group-preprocess">
+                <button class="menu-btn" onclick="selectFunction('delete_column')">컬럼 삭제</button>
+                <button class="menu-btn" onclick="selectFunction('missing_value')">결측치 처리</button>
+                <button class="menu-btn" onclick="selectFunction('scaling')">스케일링 (Scaling)</button>
+                <button class="menu-btn" onclick="selectFunction('encoding')">인코딩 (One-Hot)</button>
+                <button class="menu-btn" onclick="selectFunction('data_type_conversion')">데이터 형변환</button>
+                <button class="menu-btn" onclick="selectFunction('matrix_transpose')">행렬 전치</button>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this,'eda')">
+                탐색적 분석 (EDA) <span class="arrow">▶</span>
+            </div>
+            <div class="accordion-body" id="group-eda">
+                <button class="menu-btn" onclick="selectFunction('statistics')">기술 통계</button>
+                <button class="menu-btn" onclick="selectFunction('line_chart')">꺾은선 차트</button>
+                <button class="menu-btn" onclick="selectFunction('histogram')">히스토그램</button>
+                <button class="menu-btn" onclick="selectFunction('pie_chart')">파이 차트</button>
+                <button class="menu-btn" onclick="selectFunction('bar_chart')">막대 차트</button>
+                <button class="menu-btn" onclick="selectFunction('scatter_plot')">산포 차트</button>
+                <button class="menu-btn" onclick="selectFunction('boxplot')">박스플롯</button>
+                <button class="menu-btn" onclick="selectFunction('correlation')">상관분석</button>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this,'model')">
+                모델링 <span class="arrow">▶</span>
+            </div>
+            <div class="accordion-body" id="group-model">
+                <button class="menu-btn" onclick="selectFunction('linear_reg')">Linear Regression</button>
+                <button class="menu-btn" onclick="selectFunction('logistic_reg')">Logistic Regression</button>
+                <button class="menu-btn" onclick="selectFunction('dt')">Decision Tree</button>
+                <button class="menu-btn" onclick="selectFunction('kmeans')">K-means</button>
+                <button class="menu-btn" onclick="selectFunction('svm')">SVM</button>
+                <button class="menu-btn" onclick="selectFunction('random_forest')">Random Forest</button>
+                <button class="menu-btn" onclick="selectFunction('pca')">PCA</button>
+                <button class="menu-btn" onclick="selectFunction('mlr')">MLR</button>
+                <button class="menu-btn" onclick="selectFunction('knn')">KNN</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="panel-box">
+            <div class="panel-header">
+                <span id="data-file-name">데이터: customer_churn.csv</span>
+                <small style="color:#7f8c8d" id="data-row-count">30 Rows × 10 Columns</small>
+            </div>
+            <div class="data-grid-container">
+                <table class="data-table" id="main-table">
+                    <thead><tr id="table-header"></tr></thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <aside class="right-panel">
+        <div class="control-panel">
+            <div class="control-header"><span id="ctrl-title">⚙️ 설정</span></div>
+            <div class="control-body" id="ctrl-body">
+                <div class="empty-state">좌측에서 기능을 선택하거나<br>데이터를 로드하세요.</div>
+            </div>
+        </div>
+        <div class="result-panel">
+            <div class="result-header">
+                <span>📜 실행 로그</span>
+                <button style="background:none;border:none;color:#fff;cursor:pointer;font-size:.85rem"
+                        onclick="clearLog()">🧹</button>
+            </div>
+            <div id="log-content" style="padding:8px">
+                <div class="log-item">
+                    <span class="log-time">--:--:--</span>
+                    <span class="log-info">[Ready]</span> 시스템 준비 완료
+                </div>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<script>
+
+/* ==========================================================
+   1. DATA LAYER
+   ========================================================== */
+
+let currentData = {
+    columns: ['ID','Age','Gender','Income','Credit_Score','Tenure','Balance','NumOfProducts','IsActive','Churn'],
+    types: ['int','int','str','int','int','int','float','int','int','int'],
+    rows: []
+};
+
+function generateDemoData() {
+    const genders = ['Male','Female'];
+    for (let i = 1; i <= 30; i++) {
+        currentData.rows.push([
+            i, Math.floor(Math.random()*35)+20, genders[Math.floor(Math.random()*2)],
+            Math.floor(Math.random()*100000)+30000, Math.floor(Math.random()*350)+450,
+            Math.floor(Math.random()*10)+1, parseFloat((Math.random()*120000).toFixed(2)),
+            Math.floor(Math.random()*3)+1, Math.round(Math.random()), Math.round(Math.random()*0.4)
+        ]);
+    }
+    currentData.rows[2][3]=null; currentData.rows[5][6]=null; currentData.rows[8][1]=null;
+    currentData.rows[12][4]=null; currentData.rows[15][3]=null; currentData.rows[20][6]=null;
+}
+generateDemoData();
+
+/* ==========================================================
+   2. TABLE RENDERING
+   ========================================================== */
+
+function renderTable() {
+    document.getElementById('table-header').innerHTML =
+        currentData.columns.map(c => `<th>${c}</th>`).join('');
+    document.getElementById('table-body').innerHTML =
+        currentData.rows.slice(0,50).map(r => '<tr>' + r.map(c =>
+            `<td>${(c===null||c===undefined)?'<span style="color:#e74c3c;font-style:italic">NaN</span>':c}</td>`
+        ).join('') + '</tr>').join('');
+    document.getElementById('data-row-count').textContent =
+        `${currentData.rows.length.toLocaleString()} Rows × ${currentData.columns.length} Columns`;
+}
+renderTable();
+
+/* ==========================================================
+   3. UTILITY FUNCTIONS
+   ========================================================== */
+
+function getNumericColumns()     { return currentData.columns.filter((_,i) => currentData.types[i]!=='str'); }
+function getCategoricalColumns() { return currentData.columns.filter((_,i) => currentData.types[i]==='str'); }
+function getAllColumns()          { return [...currentData.columns]; }
+
+function addLog(msg, type='info') {
+    const time = new Date().toLocaleTimeString();
+    const cls = type==='success'?'log-success':type==='warn'?'log-warn':'log-info';
+    document.getElementById('log-content').innerHTML +=
+        `<div class="log-item"><span class="log-time">${time}</span> <span class="${cls}">${msg}</span></div>`;
+    document.querySelector('.result-panel').scrollTop = 99999;
+}
+
+function clearLog() {
+    document.getElementById('log-content').innerHTML =
+        `<div class="log-item"><span class="log-time">${new Date().toLocaleTimeString()}</span>
+         <span class="log-info">[Cleaned] 로그 초기화</span></div>`;
+}
+
+function toggleAccordion(header, group) {
+    document.querySelectorAll('.accordion-header').forEach(h => {
+        h.classList.remove('active'); h.querySelector('.arrow').textContent = '▶';
+    });
+    document.querySelectorAll('.accordion-body').forEach(b => b.classList.remove('open'));
+    header.classList.add('active'); header.querySelector('.arrow').textContent = '▼';
+    document.getElementById('group-'+group).classList.add('open');
+}
+
+function editProjectName() {
+    const name = prompt('새 프로젝트 이름:', document.getElementById('project-name').innerText);
+    if (name && name.trim()) { document.getElementById('project-name').innerText = name.trim(); addLog(`프로젝트명 변경: ${name.trim()}`); }
+}
+
+function previewFile() { const f=document.getElementById('fileInput'); if(f.files.length>0) addLog(`파일 선택: ${f.files[0].name}`); }
+
+function simulateUpload() {
+    const f=document.getElementById('fileInput');
+    if (f.files.length>0) { document.getElementById('data-file-name').textContent=`데이터: ${f.files[0].name}`; addLog(`[로드 완료] ${f.files[0].name}`,'success'); }
+    else addLog('[경고] 파일을 먼저 선택하세요.','warn');
+}
+
+function colCheckboxes(cols, prefix, checked=false) {
+    return `<div class="var-list">${cols.map(c =>
+        `<label class="var-item"><input type="checkbox" name="${prefix}" value="${c}" ${checked?'checked':''}> ${c}</label>`
+    ).join('')}</div>`;
+}
+
+function getChecked(prefix) {
+    return [...document.querySelectorAll(`input[name="${prefix}"]:checked`)].map(e=>e.value);
+}
+
+function T(text) { return `<span class="tip" data-tip="${text}">ⓘ</span>`; }
+
+function countMissing() {
+    let c=0; currentData.rows.forEach(r=>r.forEach(v=>{ if(v===null||v===undefined||v==='') c++; })); return c;
+}
+
+function getColValues(col) {
+    const ci=currentData.columns.indexOf(col);
+    return currentData.rows.map(r=>r[ci]).filter(v=>v!==null&&v!==undefined&&v!=='');
+}
+
+function getNumColValues(col) { return getColValues(col).map(Number).filter(v=>!isNaN(v)); }
+
+
+/* ==========================================================
+   4. FEATURE STORE
+   ========================================================== */
+
+const featureStoreData = [
+    { id:'fs1', name:'수리부속_수요실적_5개년', desc:'2019~2023년 수리부속 수요 실적. 품목코드, 월별 수요량, 단가 포함.',
+      rows:125000, cols:15, updated:'2024-01-15',
+      headers:['품목코드','품명','규격','단가','2023_01','2023_02','2023_03','2023_04','2023_05','2023_06'],
+      data:[['A001234','베어링','6205-2RS',15000,120,135,142,128,156,143],['A001235','오일씰','50x72x8',8500,89,92,78,95,88,91],
+            ['A001236','필터','HF-2500',32000,45,52,48,61,55,58],['A001237','벨트','V-BELT A68',12500,78,82,75,88,92,85],
+            ['A001238','가스켓','G-TYPE 120',5500,156,148,162,171,165,158]] },
+    { id:'fs2', name:'장비_가동현황', desc:'장비별 월간 가동률 및 고장 이력. 예방정비 계획 수립용.',
+      rows:45000, cols:12, updated:'2024-01-20',
+      headers:['장비코드','장비명','설치위치','가동률(%)','고장횟수','MTBF','MTTR','최근정비일','차기정비','상태'],
+      data:[['EQ001','CNC선반 #1','A동 1층',92.5,3,720,4.2,'2024-01-10','2024-04-10','정상'],
+            ['EQ002','CNC선반 #2','A동 1층',88.3,5,540,6.1,'2024-01-05','2024-04-05','정상'],
+            ['EQ003','밀링머신 #1','A동 2층',95.1,2,960,3.5,'2024-01-12','2024-05-12','정상'],
+            ['EQ004','밀링머신 #2','A동 2층',78.6,8,380,8.2,'2024-01-18','2024-02-18','주의'],
+            ['EQ005','프레스 #1','B동 1층',91.2,4,680,5.0,'2024-01-08','2024-04-08','정상']] },
+    { id:'fs3', name:'자재_재고현황', desc:'창고별 자재 재고 현황 및 안전재고 대비 현황.',
+      rows:32000, cols:10, updated:'2024-01-22',
+      headers:['자재코드','자재명','창고','현재고','안전재고','상태','단가','재고금액','최종입고일','리드타임'],
+      data:[['M10001','철판 1.6T','창고A',500,200,'정상',45000,22500000,'2024-01-15',7],
+            ['M10002','철판 2.0T','창고A',180,200,'부족',52000,9360000,'2024-01-10',7],
+            ['M10003','스테인리스판','창고A',120,100,'정상',125000,15000000,'2024-01-18',14],
+            ['M10004','알루미늄봉','창고B',350,150,'정상',28000,9800000,'2024-01-20',5],
+            ['M10005','동파이프','창고B',85,100,'부족',68000,5780000,'2024-01-08',10]] },
+    { id:'fs4', name:'고객_이탈예측_학습데이터', desc:'고객 이탈 예측 학습용. 인구통계, 거래이력, 서비스이용 정보.',
+      rows:85000, cols:18, updated:'2024-01-18',
+      headers:['고객ID','연령','성별','가입기간','월평균거래액','거래횟수','민원횟수','등급','최근접속','이탈여부'],
+      data:[['C00001',35,'남',48,125000,12,0,'Gold','2024-01-20',0],['C00002',42,'여',36,85000,8,1,'Silver','2024-01-18',0],
+            ['C00003',28,'남',12,45000,4,2,'Bronze','2024-01-05',1],['C00004',55,'여',72,250000,20,0,'VIP','2024-01-22',0],
+            ['C00005',31,'남',24,62000,6,3,'Bronze','2023-12-15',1]] },
+    { id:'fs5', name:'센서_측정데이터_2024', desc:'IoT 센서 실시간 데이터. 온도, 습도, 진동, 압력 등.',
+      rows:500000, cols:14, updated:'2024-01-23',
+      headers:['측정시간','센서ID','위치','온도(℃)','습도(%)','진동(mm/s)','압력(bar)','전류(A)','상태코드','알람'],
+      data:[['2024-01-23 09:00','SN001','A동-1F',24.5,45,0.12,2.5,15.2,'N','-'],
+            ['2024-01-23 09:00','SN002','A동-1F',25.1,48,0.15,2.6,16.1,'N','-'],
+            ['2024-01-23 09:00','SN003','A동-2F',26.8,52,0.28,2.4,14.8,'W','진동주의'],
+            ['2024-01-23 09:01','SN004','B동-1F',23.2,42,0.08,2.7,18.5,'N','-'],
+            ['2024-01-23 09:01','SN005','B동-1F',24.8,44,0.11,2.5,17.2,'N','-']] }
+];
+
+function openFeatureStorePopup() {
+    const w=1100,h=750,left=(screen.width-w)/2,top=(screen.height-h)/2;
+    const popup=window.open('','FeatureStore',`width=${w},height=${h},top=${top},left=${left},resizable=yes,scrollbars=yes`);
+    if(!popup){alert('팝업을 허용해주세요.');return;}
+    popup.featureStoreData=featureStoreData; popup.parentWindow=window;
+    popup.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>피처 스토어</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI','Apple SD Gothic Neo',sans-serif;background:#f8f9fa;color:#333}.top-bar{background:#2c3e50;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}.top-bar h1{font-size:1.2rem}.search-box{padding:8px 16px;border:none;border-radius:20px;width:300px;font-size:.9rem}.container{padding:20px}.card{background:#fff;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:12px;transition:box-shadow .2s}.card:hover{box-shadow:0 3px 12px rgba(0,0,0,.1)}.card-top{padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer}.card-title{font-weight:700;font-size:1rem;color:#2c3e50;margin-bottom:4px}.card-desc{font-size:.85rem;color:#666;line-height:1.4}.card-meta{display:flex;gap:14px;font-size:.8rem;color:#888;margin-top:6px}.card-meta span{background:#f0f0f0;padding:2px 8px;border-radius:10px}.card-actions{display:flex;gap:8px;flex-shrink:0;align-items:flex-start}.btn{padding:7px 14px;border:none;border-radius:5px;cursor:pointer;font-size:.82rem;font-weight:600}.btn-preview{background:#ecf0f1;color:#555}.btn-preview:hover{background:#ddd}.btn-load{background:#27ae60;color:#fff}.btn-load:hover{background:#219a52}.preview-area{display:none;padding:0 20px 16px;overflow-x:auto}.preview-area.open{display:block}table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px}th{background:#34495e;color:#fff;padding:8px 12px;text-align:left}td{padding:7px 12px;border-bottom:1px solid #eee}tr:nth-child(even){background:#f8f9fa}</style></head><body>
+<div class="top-bar"><h1>📦 피처 스토어 — 데이터 목록</h1><input class="search-box" placeholder="🔍 데이터셋 검색..." oninput="filterCards(this.value)"></div>
+<div class="container" id="cc"></div>
+<script>let op=null;
+function render(l){const c=document.getElementById('cc');if(!l||!l.length){c.innerHTML='<div style="text-align:center;color:#aaa;padding:40px">결과 없음</div>';return;}
+c.innerHTML=l.map(d=>\`<div class="card"><div class="card-top" onclick="tp('\${d.id}')"><div><div class="card-title">\${d.name}</div><div class="card-desc">\${d.desc}</div><div class="card-meta"><span>\${d.rows.toLocaleString()} rows</span><span>\${d.cols} cols</span><span>갱신:\${d.updated}</span></div></div><div class="card-actions"><button class="btn btn-preview" id="pb-\${d.id}" onclick="event.stopPropagation();tp('\${d.id}')">👁 미리보기</button><button class="btn btn-load" onclick="event.stopPropagation();ld('\${d.id}')">📥 불러오기</button></div></div><div class="preview-area" id="pv-\${d.id}"><table><thead><tr>\${d.headers.map(h=>\`<th>\${h}</th>\`).join('')}</tr></thead><tbody>\${d.data.map(r=>\`<tr>\${r.map(c=>\`<td>\${c}</td>\`).join('')}</tr>\`).join('')}</tbody></table></div></div>\`).join('');}
+function tp(id){if(op&&op!==id){document.getElementById('pv-'+op).classList.remove('open');document.getElementById('pb-'+op).textContent='👁 미리보기';}const el=document.getElementById('pv-'+id),b=document.getElementById('pb-'+id);if(el.classList.contains('open')){el.classList.remove('open');b.textContent='👁 미리보기';op=null;}else{el.classList.add('open');b.textContent='🔼 접기';op=id;}}
+function filterCards(q){render(window.featureStoreData.filter(d=>d.name.toLowerCase().includes(q.toLowerCase())||d.desc.toLowerCase().includes(q.toLowerCase())));}
+function ld(id){const d=window.featureStoreData.find(x=>x.id===id);if(!d)return;if(window.parentWindow&&window.parentWindow.loadFeatureStoreData){window.parentWindow.loadFeatureStoreData(d);window.close();}else alert('연결 불가');}
+render(window.featureStoreData);<\/script></body></html>`);
+    popup.document.close(); addLog('피처 스토어 목록 조회');
+}
+
+function loadFeatureStoreData(item) {
+    currentData.columns=[...item.headers];
+    currentData.types=item.headers.map((_,i)=>typeof item.data[0][i]==='number'?'int':'str');
+    currentData.rows=item.data.map(r=>[...r]);
+    document.getElementById('data-file-name').textContent=`데이터: ${item.name}`;
+    renderTable(); addLog(`[로드 완료] ${item.name} (${item.rows.toLocaleString()} rows)`,'success');
+}
+
+/* ==========================================================
+   5. RESULT POPUP
+   ========================================================== */
+
+function openResultPopup(title, html, w=950, h=720) {
+    const left=(screen.width-w)/2, top=(screen.height-h)/2;
+    const popup=window.open('','_blank',`width=${w},height=${h},top=${top},left=${left},resizable=yes,scrollbars=yes`);
+    if(!popup){alert('팝업을 허용해주세요.');return null;}
+    popup.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>${title}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI','Apple SD Gothic Neo',sans-serif;background:#f4f6f8;color:#333;padding:24px}
+.container{background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:28px;min-height:500px}
+h2{color:#2c3e50;font-size:1.3rem;margin-bottom:18px;padding-bottom:10px;border-bottom:3px solid #3498db}
+h3{color:#34495e;font-size:1.05rem;margin:16px 0 10px}
+table.mt{width:100%;border-collapse:collapse;margin:10px 0 18px;font-size:.92rem}
+table.mt th{background:#34495e;color:#fff;padding:10px 14px;text-align:left;font-weight:600}
+table.mt td{padding:9px 14px;border-bottom:1px solid #eee}table.mt tr:nth-child(even){background:#f8f9fa}
+table.st{width:100%;border-collapse:collapse;margin:10px 0;font-size:.88rem}
+table.st th,table.st td{padding:7px 10px;border:1px solid #ddd;text-align:right}table.st th{background:#f0f0f0;text-align:center}
+.cw{background:#fdfdfd;border:1px solid #eee;border-radius:8px;padding:15px;margin:12px 0;text-align:center}canvas{max-width:100%}
+.tb{display:flex;border-bottom:2px solid #3498db;margin-bottom:16px}
+.tbtn{padding:10px 22px;cursor:pointer;border:none;background:none;font-size:.95rem;font-weight:600;color:#7f8c8d;border-bottom:3px solid transparent;transition:all .2s}
+.tbtn.active{color:#3498db;border-bottom-color:#3498db}.tbtn:hover{color:#2c3e50}
+.tc{display:none}.tc.active{display:block}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.82rem;font-weight:600}
+.bg{background:#d4edda;color:#155724}.bw{background:#fff3cd;color:#856404}.bb{background:#f8d7da;color:#721c24}
+.bcl{margin-top:20px;padding:10px 24px;background:#e74c3c;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.95rem;float:right}.bcl:hover{background:#c0392b}
+.note{background:#eaf6ff;border-left:4px solid #3498db;padding:10px 14px;margin:10px 0;font-size:.88rem;color:#004085;border-radius:0 6px 6px 0}
+.owarn{background:#f8d7da;border-left:4px solid #e74c3c;padding:10px;margin:10px 0;border-radius:0 6px 6px 0;font-size:.9rem}
+</style></head><body><div class="container">${html}<button class="bcl" onclick="window.close()">닫기</button></div></body></html>`);
+    popup.document.close(); return popup;
+}
+
+/* ==========================================================
+   6. CANVAS CHART FUNCTIONS
+   ========================================================== */
+
+const CC = ['#3498db','#e74c3c','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e','#16a085','#c0392b','#8e44ad','#d35400'];
+
+function drawBarChart(ctx, labels, values, opt={}) {
+    const W=ctx.canvas.width, H=ctx.canvas.height, p={t:40,b:60,l:60,r:20};
+    const colors=opt.colors||CC, mx=Math.max(...values)*1.15||1;
+    const bw=Math.min(50,(W-p.l-p.r)/labels.length*0.7), gap=(W-p.l-p.r)/labels.length;
+    ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+    for(let i=0;i<=5;i++){const y=p.t+(H-p.t-p.b)*(1-i/5);ctx.strokeStyle='#eee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke();ctx.fillStyle='#888';ctx.font='11px sans-serif';ctx.textAlign='right';ctx.fillText((mx*i/5).toFixed(opt.dec||0),p.l-8,y+4);}
+    labels.forEach((lb,i)=>{const x=p.l+gap*i+gap/2-bw/2,h=(values[i]/mx)*(H-p.t-p.b),y=H-p.b-h;ctx.fillStyle=colors[i%colors.length];ctx.fillRect(x,y,bw,h);ctx.fillStyle='#333';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText(values[i].toFixed(opt.dec||0),x+bw/2,y-6);ctx.fillStyle='#555';ctx.font='11px sans-serif';ctx.save();ctx.translate(x+bw/2,H-p.b+10);if(lb.length>6){ctx.rotate(-0.4);ctx.textAlign='right';}ctx.fillText(lb,0,8);ctx.restore();});
+    if(opt.title){ctx.fillStyle='#2c3e50';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText(opt.title,W/2,22);}
+}
+
+function drawLineChart(ctx, labels, datasets, opt={}) {
+    const W=ctx.canvas.width,H=ctx.canvas.height,p={t:40,b:60,l:60,r:20};
+    const colors=['#3498db','#e74c3c','#2ecc71','#f39c12','#9b59b6'];
+    let aV=[];datasets.forEach(d=>aV.push(...d.values));
+    const mx=Math.max(...aV)*1.15,mn=Math.min(0,Math.min(...aV)),rng=mx-mn;
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    for(let i=0;i<=5;i++){const y=p.t+(H-p.t-p.b)*(1-i/5);ctx.strokeStyle='#eee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke();ctx.fillStyle='#888';ctx.font='11px sans-serif';ctx.textAlign='right';ctx.fillText((mn+rng*i/5).toFixed(0),p.l-8,y+4);}
+    const gap=(W-p.l-p.r)/(labels.length-1||1);
+    datasets.forEach((ds,di)=>{ctx.strokeStyle=colors[di%5];ctx.lineWidth=2.5;ctx.beginPath();ds.values.forEach((v,i)=>{const x=p.l+gap*i,y=p.t+(H-p.t-p.b)*(1-(v-mn)/rng);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();ds.values.forEach((v,i)=>{const x=p.l+gap*i,y=p.t+(H-p.t-p.b)*(1-(v-mn)/rng);ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle=colors[di%5];ctx.fill();});});
+    labels.forEach((lb,i)=>{ctx.fillStyle='#555';ctx.font='11px sans-serif';ctx.textAlign='center';ctx.fillText(lb,p.l+gap*i,H-p.b+18);});
+    if(datasets.length>1)datasets.forEach((ds,di)=>{const lx=p.l+di*120;ctx.fillStyle=colors[di%5];ctx.fillRect(lx,H-15,14,10);ctx.fillStyle='#333';ctx.font='11px sans-serif';ctx.textAlign='left';ctx.fillText(ds.label||`S${di+1}`,lx+18,H-6);});
+    if(opt.title){ctx.fillStyle='#2c3e50';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText(opt.title,W/2,22);}
+}
+
+function drawPieChart(ctx, labels, values, opt={}) {
+    const W=ctx.canvas.width,H=ctx.canvas.height,total=values.reduce((a,b)=>a+b,0);
+    const cx=W/2-60,cy=H/2,r=Math.min(W,H)/2-50;
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    let sa=-Math.PI/2;
+    labels.forEach((lb,i)=>{const sl=(values[i]/total)*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,sa,sa+sl);ctx.closePath();ctx.fillStyle=CC[i%CC.length];ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();const mid=sa+sl/2,lx=cx+Math.cos(mid)*r*0.65,ly=cy+Math.sin(mid)*r*0.65;ctx.fillStyle='#fff';ctx.font='bold 11px sans-serif';ctx.textAlign='center';if(values[i]/total>0.05)ctx.fillText((values[i]/total*100).toFixed(1)+'%',lx,ly+4);sa+=sl;});
+    labels.forEach((lb,i)=>{const lx=W-140,ly=30+i*22;ctx.fillStyle=CC[i%CC.length];ctx.fillRect(lx,ly,12,12);ctx.fillStyle='#333';ctx.font='12px sans-serif';ctx.textAlign='left';ctx.fillText(`${lb} (${values[i]})`,lx+18,ly+10);});
+    if(opt.title){ctx.fillStyle='#2c3e50';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText(opt.title,W/2,18);}
+}
+
+function drawScatterPlot(ctx, xV, yV, opt={}) {
+    const W=ctx.canvas.width,H=ctx.canvas.height,p={t:40,b:55,l:60,r:20};
+    const xMx=Math.max(...xV)*1.1,xMn=Math.min(...xV)*0.9,yMx=Math.max(...yV)*1.1,yMn=Math.min(...yV)*0.9;
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    for(let i=0;i<=5;i++){const y=p.t+(H-p.t-p.b)*(1-i/5);ctx.strokeStyle='#eee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke();ctx.fillStyle='#888';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText((yMn+(yMx-yMn)*i/5).toFixed(0),p.l-6,y+4);}
+    for(let i=0;i<=5;i++){const x=p.l+(W-p.l-p.r)*i/5;ctx.fillStyle='#888';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText((xMn+(xMx-xMn)*i/5).toFixed(0),x,H-p.b+16);}
+    xV.forEach((xv,i)=>{const x=p.l+(xv-xMn)/(xMx-xMn)*(W-p.l-p.r),y=p.t+(1-(yV[i]-yMn)/(yMx-yMn))*(H-p.t-p.b);ctx.beginPath();ctx.arc(x,y,4.5,0,Math.PI*2);ctx.fillStyle='rgba(52,152,219,.6)';ctx.fill();ctx.strokeStyle='#2980b9';ctx.lineWidth=1;ctx.stroke();});
+    if(opt.xLabel){ctx.fillStyle='#555';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText(opt.xLabel,(p.l+W-p.r)/2,H-8);}
+    if(opt.yLabel){ctx.save();ctx.translate(14,(p.t+H-p.b)/2);ctx.rotate(-Math.PI/2);ctx.fillStyle='#555';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText(opt.yLabel,0,0);ctx.restore();}
+    if(opt.title){ctx.fillStyle='#2c3e50';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText(opt.title,W/2,22);}
+}
+
+function drawBoxPlot(ctx, datasets, labels, opt={}) {
+    const W=ctx.canvas.width,H=ctx.canvas.height,p={t:40,b:50,l:60,r:20};
+    const colors=['#3498db','#e74c3c','#2ecc71','#f39c12','#9b59b6','#1abc9c'];
+    let all=[];datasets.forEach(d=>all.push(...d));const mx=Math.max(...all)*1.1,mn=Math.min(...all)*0.9;
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    for(let i=0;i<=5;i++){const y=p.t+(H-p.t-p.b)*(1-i/5);ctx.strokeStyle='#eee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke();ctx.fillStyle='#888';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText((mn+(mx-mn)*i/5).toFixed(0),p.l-6,y+4);}
+    const gap=(W-p.l-p.r)/datasets.length,bw=Math.min(50,gap*0.5),toY=v=>p.t+(1-(v-mn)/(mx-mn))*(H-p.t-p.b);
+    datasets.forEach((data,i)=>{const s=[...data].sort((a,b)=>a-b),q1=s[Math.floor(s.length*0.25)],q2=s[Math.floor(s.length*0.5)],q3=s[Math.floor(s.length*0.75)],dMin=s[0],dMax=s[s.length-1],cx=p.l+gap*i+gap/2;
+    ctx.strokeStyle='#555';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(cx,toY(dMin));ctx.lineTo(cx,toY(dMax));ctx.stroke();ctx.beginPath();ctx.moveTo(cx-bw/4,toY(dMin));ctx.lineTo(cx+bw/4,toY(dMin));ctx.stroke();ctx.beginPath();ctx.moveTo(cx-bw/4,toY(dMax));ctx.lineTo(cx+bw/4,toY(dMax));ctx.stroke();
+    ctx.fillStyle=colors[i%6]+'44';ctx.fillRect(cx-bw/2,toY(q3),bw,toY(q1)-toY(q3));ctx.strokeStyle=colors[i%6];ctx.lineWidth=2;ctx.strokeRect(cx-bw/2,toY(q3),bw,toY(q1)-toY(q3));
+    ctx.strokeStyle='#c0392b';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(cx-bw/2,toY(q2));ctx.lineTo(cx+bw/2,toY(q2));ctx.stroke();
+    ctx.fillStyle='#555';ctx.font='11px sans-serif';ctx.textAlign='center';ctx.fillText(labels[i]||'',cx,H-p.b+16);});
+    if(opt.title){ctx.fillStyle='#2c3e50';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText(opt.title,W/2,22);}
+}
+
+function drawHeatmap(ctx, matrix, labels, opt={}) {
+    const W=ctx.canvas.width,H=ctx.canvas.height,n=matrix.length,p={t:50,b:20,l:90,r:60};
+    const cW=(W-p.l-p.r)/n,cH=(H-p.t-p.b)/n;
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    matrix.forEach((row,i)=>{row.forEach((v,j)=>{const x=p.l+j*cW,y=p.t+i*cH;let r,g,b;if(v>=0){r=255;g=Math.floor(255*(1-v));b=Math.floor(255*(1-v));}else{r=Math.floor(255*(1+v));g=Math.floor(255*(1+v));b=255;}ctx.fillStyle=`rgb(${r},${g},${b})`;ctx.fillRect(x,y,cW,cH);ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(x,y,cW,cH);ctx.fillStyle=Math.abs(v)>0.5?'#fff':'#333';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText(v.toFixed(2),x+cW/2,y+cH/2+4);});});
+    labels.forEach((lb,i)=>{ctx.fillStyle='#333';ctx.font='11px sans-serif';ctx.textAlign='right';ctx.fillText(lb,p.l-6,p.t+i*cH+cH/2+4);ctx.save();ctx.translate(p.l+i*cW+cW/2,p.t-6);ctx.rotate(-0.6);ctx.textAlign='right';ctx.fillText(lb,0,0);ctx.restore();});
+    if(opt.title){ctx.fillStyle='#2c3e50';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText(opt.title,W/2,18);}
+}
+
+function drawHistogram(ctx, values, opt={}) {
+    const bins=opt.bins||10,mn=Math.min(...values),mx=Math.max(...values),bw=(mx-mn)/bins,counts=Array(bins).fill(0);
+    values.forEach(v=>{let b=Math.floor((v-mn)/bw);if(b>=bins)b=bins-1;counts[b]++;});
+    drawBarChart(ctx,counts.map((_,i)=>(mn+bw*i+bw/2).toFixed(0)),counts,{...opt,colors:['#3498db']});
+}
+
+function drawConfusionMatrix(ctx, matrix, labels) {
+    const W=ctx.canvas.width,H=ctx.canvas.height,n=matrix.length,p={t:50,b:40,l:70,r:20};
+    const cW=(W-p.l-p.r)/n,cH=(H-p.t-p.b)/n,mx=Math.max(...matrix.flat());
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    matrix.forEach((row,i)=>{row.forEach((v,j)=>{const x=p.l+j*cW,y=p.t+i*cH,int=v/mx;ctx.fillStyle=i===j?`rgba(39,174,96,${0.2+int*0.7})`:`rgba(231,76,60,${0.1+int*0.5})`;ctx.fillRect(x,y,cW,cH);ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.strokeRect(x,y,cW,cH);ctx.fillStyle='#2c3e50';ctx.font='bold 18px sans-serif';ctx.textAlign='center';ctx.fillText(v,x+cW/2,y+cH/2+7);});});
+    labels.forEach((lb,i)=>{ctx.fillStyle='#333';ctx.font='bold 12px sans-serif';ctx.textAlign='right';ctx.fillText(lb,p.l-10,p.t+i*cH+cH/2+5);ctx.textAlign='center';ctx.fillText(lb,p.l+i*cW+cW/2,p.t-10);});
+    ctx.fillStyle='#555';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('Predicted',(p.l+W-p.r)/2,p.t-30);
+    ctx.save();ctx.translate(15,(p.t+H-p.b)/2);ctx.rotate(-Math.PI/2);ctx.fillText('Actual',0,0);ctx.restore();
+}
+
+function drawTreeVisualization(ctx, features, maxDepth) {
+    const W=ctx.canvas.width,H=ctx.canvas.height,depth=Math.min(maxDepth,4);
+    const nc=['#3498db','#2ecc71','#f39c12','#e74c3c','#9b59b6'],nw=110,nh=36,vG=70;
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    function dn(x,y,w,h,text,col,leaf){
+        if(leaf){ctx.fillStyle=col+'33';ctx.beginPath();ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke();}
+        else{ctx.fillStyle=col+'22';ctx.strokeStyle=col;ctx.lineWidth=2;const r=6;ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();ctx.fill();ctx.stroke();}
+        ctx.fillStyle='#2c3e50';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText(text,x+w/2,y+h/2+4);
+    }
+    function de(x1,y1,x2,y2,lb){ctx.strokeStyle='#999';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.fillStyle='#e74c3c';ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText(lb,(x1+x2)/2-10,(y1+y2)/2-3);}
+    const rx=W/2-nw/2,ry=15;
+    dn(rx,ry,nw,nh,`${features[0%features.length]} ≤ 50`,nc[0],false);
+    const l1y=ry+nh+vG;
+    de(W/2,ry+nh,W/4,l1y,'True');de(W/2,ry+nh,W*3/4,l1y,'False');
+    dn(W/4-nw/2,l1y,nw,nh,`${features[1%features.length]} ≤ 600`,nc[1],false);
+    dn(W*3/4-nw/2,l1y,nw,nh,`${features[2%features.length]} ≤ 3`,nc[1],false);
+    if(depth>=2){const l2y=l1y+nh+vG;de(W/4,l1y+nh,W/8,l2y,'T');de(W/4,l1y+nh,W*3/8,l2y,'F');de(W*3/4,l1y+nh,W*5/8,l2y,'T');de(W*3/4,l1y+nh,W*7/8,l2y,'F');
+    dn(W/8-nw/2,l2y,nw,nh,'Class: 0',nc[2],true);dn(W*3/8-nw/2,l2y,nw,nh,`${features[0%features.length]} ≤ 35`,nc[2],false);dn(W*5/8-nw/2,l2y,nw,nh,'Class: 1',nc[2],true);dn(W*7/8-nw/2,l2y,nw,nh,'Class: 0',nc[2],true);
+    if(depth>=3){const l3y=l2y+nh+vG;de(W*3/8,l2y+nh,W*5/16,l3y,'T');de(W*3/8,l2y+nh,W*7/16,l3y,'F');dn(W*5/16-nw/2,l3y,nw,nh,'Class: 1',nc[3],true);dn(W*7/16-nw/2,l3y,nw,nh,'Class: 0',nc[3],true);}}
+    ctx.fillStyle='#2c3e50';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText('Decision Tree Structure',W/2,H-10);
+}
+
+/* ==========================================================
+   7. SELECT FUNCTION
+   ========================================================== */
+
+function selectFunction(fn) {
+    document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active-func'));
+    if(event&&event.target)event.target.classList.add('active-func');
+    const ct=document.getElementById('ctrl-title'),cb=document.getElementById('ctrl-body');
+    const nc=getNumericColumns(),cc=getCategoricalColumns(),ac=getAllColumns();
+    switch(fn){
+    case 'delete_column':
+        ct.innerText='🗑️ 컬럼 삭제';
+        cb.innerHTML=`<div class="info-box">불필요한 컬럼을 선택하여 삭제합니다.</div>
+            <div class="form-group"><label class="form-label">대상 컬럼 ${T('삭제할 컬럼을 체크하세요. 복수 선택 가능.')}</label>${colCheckboxes(ac,'del_cols')}</div>
+            <button class="btn-action btn-danger" onclick="execDeleteColumns()">선택 컬럼 삭제</button>`;
+        addLog('컬럼 삭제 선택');break;
+    case 'missing_value':
+        ct.innerText='🔧 결측치 처리';
+        cb.innerHTML=`<div class="warn-box">현재 결측치: <strong>${countMissing()}</strong>건</div>
+            <div class="form-group"><label class="form-label">대상 컬럼 ${T('결측치를 처리할 컬럼을 선택합니다.')}</label>${colCheckboxes(ac,'mv_cols',true)}</div>
+            <div class="form-group"><label class="form-label">처리 방법 ${T('Drop: 결측 행 삭제, Mean/Median/Mode: 대표값 대체')}</label>
+            <select class="form-select" id="mv_method"><option value="drop_row">행 삭제 (Drop Rows)</option><option value="mean">평균값 대체 (Mean)</option><option value="median">중앙값 대체 (Median)</option><option value="mode">최빈값 대체 (Mode)</option><option value="zero">0으로 대체</option></select></div>
+            <button class="btn-action" onclick="execMissingValue()">결측치 처리 실행</button>`;
+        addLog('결측치 처리 선택');break;
+    case 'scaling':
+        ct.innerText='📏 스케일링';
+        cb.innerHTML=`<div class="info-box">수치형 컬럼의 값 범위를 정규화합니다.</div>
+            <div class="form-group"><label class="form-label">대상 컬럼 ${T('스케일링할 수치형 컬럼을 선택합니다.')}</label>${colCheckboxes(nc,'sc_cols')}</div>
+            <div class="form-group"><label class="form-label">스케일러 ${T('Standard: 평균0/표준편차1, MinMax: 0~1, Robust: IQR 기반')}</label>
+            <select class="form-select" id="sc_method"><option value="standard">StandardScaler (Z-score)</option><option value="minmax">MinMaxScaler (0~1)</option><option value="robust">RobustScaler (IQR)</option></select></div>
+            <button class="btn-action" onclick="execScaling()">스케일링 적용</button>`;
+        addLog('스케일링 선택');break;
+    case 'encoding':
+        ct.innerText='🔤 원-핫 인코딩';
+        cb.innerHTML=`<div class="info-box">범주형 변수를 0/1 이진 컬럼으로 변환합니다.</div>
+            <div class="form-group"><label class="form-label">대상 컬럼 ${T('문자형 컬럼만 표시. 각 고유값이 새 컬럼이 됩니다.')}</label>${cc.length>0?colCheckboxes(cc,'enc_cols'):'<div style="color:#e74c3c;font-size:.85rem">범주형 컬럼 없음</div>'}</div>
+            <button class="btn-action" onclick="execEncoding()" ${cc.length===0?'disabled':''}>인코딩 적용</button>`;
+        addLog('인코딩 선택');break;
+    case 'data_type_conversion':
+        ct.innerText='🔄 데이터 형변환';
+        cb.innerHTML=`<div class="info-box">컬럼의 데이터 타입을 변경합니다.</div>
+            <div class="form-group"><label class="form-label">대상 컬럼 ${T('형변환할 컬럼. 괄호 안은 현재 타입.')}</label>
+            <select class="form-select" id="conv_col">${ac.map(c=>`<option value="${c}">${c} (${currentData.types[currentData.columns.indexOf(c)]})</option>`).join('')}</select></div>
+            <div class="form-group"><label class="form-label">변환 타입 ${T('int: 정수, float: 실수, str: 문자열')}</label>
+            <select class="form-select" id="conv_type"><option value="int">정수 (int)</option><option value="float">실수 (float)</option><option value="str">문자열 (str)</option></select></div>
+            <button class="btn-action" onclick="execTypeConversion()">형변환 적용</button>`;
+        addLog('형변환 선택');break;
+    case 'matrix_transpose':
+        ct.innerText='↔️ 행렬 전치';
+        cb.innerHTML=`<div class="info-box">데이터의 행↔열을 뒤바꿉니다. ${T('행과 열이 교환됩니다.')}</div>
+            <div style="background:#f8f9fa;padding:10px;border-radius:6px;font-size:.85rem;margin-bottom:10px">현재: <strong>${currentData.rows.length}행 × ${currentData.columns.length}열</strong><br>전치 후: <strong>${currentData.columns.length}행 × ${currentData.rows.length}열</strong></div>
+            <button class="btn-action" onclick="execTranspose()">전치 실행</button>`;
+        addLog('행렬 전치 선택');break;
+    case 'statistics':
+        ct.innerText='📊 기술 통계';
+        cb.innerHTML=`<div class="form-group"><label class="form-label">대상 컬럼 ${T('Count, Mean, Std, Min, Q1~Q3, Max, Missing 산출')}</label>${colCheckboxes(nc,'stat_cols',true)}</div>
+            <button class="btn-action" onclick="execStatistics()">통계 산출</button>`;
+        addLog('기술 통계 선택');break;
+    case 'line_chart':
+        ct.innerText='📈 꺾은선 차트';
+        cb.innerHTML=`<div class="form-group"><label class="form-label">X축 ${T('시간이나 순서 컬럼')}</label><select class="form-select" id="line_x">${ac.map(c=>`<option value="${c}">${c}</option>`).join('')}</select></div>
+            <div class="form-group"><label class="form-label">Y축 (수치) ${T('복수 선택시 다중 라인')}</label>${colCheckboxes(nc,'line_y')}</div>
+            <button class="btn-action" onclick="execLineChart()">차트 그리기</button>`;
+        addLog('꺾은선 차트 선택');break;
+    case 'histogram':
+        ct.innerText='📊 히스토그램';
+        cb.innerHTML=`<div class="form-group"><label class="form-label">대상 컬럼 ${T('수치형 값 분포를 구간별 빈도로 표시')}</label><select class="form-select" id="hist_col">${nc.map(c=>`<option value="${c}">${c}</option>`).join('')}</select></div>
+            <div class="form-group"><label class="form-label">구간 수 (Bins) ${T('클수록 세밀한 분포')}</label><input type="number" class="form-input" id="hist_bins" value="10" min="3" max="50"></div>
+            <button class="btn-action" onclick="execHistogram()">차트 그리기</button>`;
+        addLog('히스토그램 선택');break;
+    case 'pie_chart':
+        ct.innerText='🥧 파이 차트';
+        cb.innerHTML=`<div class="form-group"><label class="form-label">범주 컬럼 ${T('각 고유값 비율을 원형으로 시각화')}</label><select class="form-select" id="pie_col">${ac.map(c=>`<option value="${c}">${c}</option>`).join('')}</select></div>
+            <button class="btn-action" onclick="execPieChart()">차트 그리기</button>`;
+        addLog('파이 차트 선택');break;
+    case 'bar_chart':
+        ct.innerText='📊 막대 차트';
+        cb.innerHTML=`<div class="form-group"><label class="form-label">X축 (범주) ${T('막대로 표시할 범주 컬럼')}</label><select class="form-select" id="bar_x">${ac.map(c=>`<option value="${c}">${c}</option>`).join('')}</select></div>
+            <div class="form-group"><label class="form-label">Y축 ${T('빈도: 각 범주 개수, 수치 선택시 그룹 평균')}</label><select class="form-select" id="bar_y"><option value="">빈도수 (Count)</option>${nc.map(c=>`<option value="${c}">${c} (평균)</option>`).join('')}</select></div>
+            <button class="btn-action" onclick="execBarChart()">차트 그리기</button>`;
+        addLog('막대 차트 선택');break;
+    case 'scatter_plot':
+        ct.innerText='🔵 산포 차트';
+        cb.innerHTML=`<div class="form-group"><label class="form-label">X축 ${T('가로축 수치 컬럼')}</label><select class="form-select" id="scat_x">${nc.map(c=>`<option value="${c}">${c}</option>`).join('')}</select></div>
+            <div class="form-group"><label class="form-label">Y축 ${T('세로축 수치 컬럼')}</label><select class="form-select" id="scat_y">${nc.map((c,i)=>`<option value="${c}" ${i===1?'selected':''}>${c}</option>`).join('')}</select></div>
+            <button class="btn-action" onclick="execScatter()">차트 그리기</button>`;
+        addLog('산포 차트 선택');break;
+    case 'boxplot':
+        ct.innerText='📦 박스플롯';
+        cb.innerHTML=`<div class="form-group"><label class="form-label">대상 컬럼 ${T('Q1~Q3, 중앙값, 이상치 비교')}</label>${colCheckboxes(nc,'box_cols')}</div>
+            <button class="btn-action" onclick="execBoxplot()">차트 그리기</button>`;
+        addLog('박스플롯 선택');break;
+    case 'correlation':
+        ct.innerText='🔗 상관분석';
+        cb.innerHTML=`<div class="form-group"><label class="form-label">대상 변수 ${T('수치형 변수 간 선형 관계 -1~+1')}</label>${colCheckboxes(nc,'corr_cols',true)}</div>
+            <div class="form-group"><label class="form-label">상관계수 유형 ${T('Pearson: 선형, Spearman: 순위 기반')}</label><select class="form-select" id="corr_method"><option value="pearson">Pearson (선형)</option><option value="spearman">Spearman (순위)</option></select></div>
+            <button class="btn-action" onclick="execCorrelation()">분석 실행</button>`;
+        addLog('상관분석 선택');break;
+    case 'linear_reg': ct.innerText='📉 Linear Regression'; cb.innerHTML=modelHTML('linear_reg','단일 독립변수 선형 회귀'); addLog('Linear Reg 선택');break;
+    case 'logistic_reg': ct.innerText='🎯 Logistic Regression'; cb.innerHTML=modelHTML('logistic_reg','이진 분류 로지스틱 회귀'); addLog('Logistic Reg 선택');break;
+    case 'dt':
+        ct.innerText='🌲 Decision Tree';
+        cb.innerHTML=modelHTML('dt','트리 구조 분류. 해석력 높음',`<div class="form-group"><label class="form-label">Max Depth ${T('최대 깊이. 클수록 복잡/과적합 위험')}</label><input type="number" class="form-input" id="dt_depth" value="5" min="1" max="20"></div>`);
+        addLog('Decision Tree 선택');break;
+    case 'kmeans':
+        ct.innerText='🎨 K-means';
+        cb.innerHTML=`<div class="info-box">비지도 학습: Target 불필요 ${T('K개 그룹으로 자동 군집화')}</div>
+            <div class="form-group"><label class="form-label">Features ${T('클러스터링에 사용할 수치형 변수')}</label>${colCheckboxes(nc,'km_features')}</div>
+            <div class="form-group"><label class="form-label">K ${T('생성할 그룹 수')}</label><input type="number" class="form-input" id="km_k" value="3" min="2" max="10"></div>
+            <button class="btn-action btn-success" onclick="execModel('kmeans')">클러스터링 실행</button>`;
+        addLog('K-means 선택');break;
+    case 'svm':
+        ct.innerText='⚡ SVM';
+        cb.innerHTML=modelHTML('svm','초평면 기반 분류',`<div class="form-group"><label class="form-label">Kernel ${T('rbf: 비선형, linear: 선형, poly: 다항식')}</label><select class="form-select" id="svm_kernel"><option>rbf</option><option>linear</option><option>poly</option></select></div>`);
+        addLog('SVM 선택');break;
+    case 'random_forest':
+        ct.innerText='🌳 Random Forest';
+        cb.innerHTML=modelHTML('random_forest','결정 트리 앙상블',`<div class="form-group"><label class="form-label">n_estimators ${T('트리 수. 많을수록 안정적')}</label><input type="number" class="form-input" id="rf_n" value="100" min="10" max="500"></div>`);
+        addLog('Random Forest 선택');break;
+    case 'pca':
+        ct.innerText='🔬 PCA';
+        cb.innerHTML=`<div class="info-box">차원 축소: Target 불필요 ${T('고차원→저차원 압축')}</div>
+            <div class="form-group"><label class="form-label">Features ${T('차원 축소 대상 수치 컬럼')}</label>${colCheckboxes(nc,'pca_features',true)}</div>
+            <div class="form-group"><label class="form-label">주성분 수 ${T('보통 2~3개로 시각화')}</label><input type="number" class="form-input" id="pca_n" value="2" min="1" max="${nc.length}"></div>
+            <button class="btn-action btn-success" onclick="execModel('pca')">PCA 실행</button>`;
+        addLog('PCA 선택');break;
+    case 'mlr': ct.innerText='📐 MLR'; cb.innerHTML=modelHTML('mlr','다중 선형 회귀'); addLog('MLR 선택');break;
+    case 'knn':
+        ct.innerText='👥 KNN';
+        cb.innerHTML=modelHTML('knn','K개 최근접 이웃으로 예측',`<div class="form-group"><label class="form-label">K (이웃 수) ${T('작으면 민감, 크면 일반화')}</label><input type="number" class="form-input" id="knn_k" value="5" min="1" max="20"></div>
+            <div class="form-group"><label class="form-label">Task ${T('분류: 범주, 회귀: 수치')}</label><select class="form-select" id="knn_task"><option value="classification">분류</option><option value="regression">회귀</option></select></div>`);
+        addLog('KNN 선택');break;
+    default: ct.innerText='⚙️ 설정'; cb.innerHTML='<div class="empty-state">준비되지 않은 기능</div>';
+    }
+}
+
+function modelHTML(id, desc, extra='') {
+    const nc=getNumericColumns(),ac=getAllColumns();
+    return `<div class="info-box">${desc}</div>
+        <div class="form-group" style="background:#fff3cd;padding:8px;border-radius:4px"><label class="form-label">🎯 Target ${T('모델이 예측할 대상 변수')}</label>
+        <select class="form-select" id="${id}_target"><option value="">선택하세요</option>${ac.map(c=>`<option value="${c}">${c}</option>`).join('')}</select></div>
+        <div class="form-group" style="background:#e8f4fc;padding:8px;border-radius:4px"><label class="form-label">Features ${T('예측에 사용할 입력 변수들')}</label>${colCheckboxes(nc,id+'_features')}</div>
+        <div class="form-group"><label class="form-label">Train/Test 분할 비율 ${T('테스트 비율. 30%면 학습70%/평가30%')}</label>
+        <select class="form-select" id="${id}_split"><option value="20">학습 80% / 평가 20%</option><option value="30" selected>학습 70% / 평가 30%</option><option value="40">학습 60% / 평가 40%</option></select></div>
+        ${extra}<button class="btn-action btn-success" onclick="execModel('${id}')">모델 학습 시작</button>`;
+}
+
+/* ==========================================================
+   8. PREPROCESSING EXECUTION
+   ========================================================== */
+
+function execDeleteColumns(){const c=getChecked('del_cols');if(!c.length){addLog('[경고] 컬럼 선택','warn');return;}c.map(x=>currentData.columns.indexOf(x)).filter(i=>i>=0).sort((a,b)=>b-a).forEach(i=>{currentData.columns.splice(i,1);currentData.types.splice(i,1);currentData.rows.forEach(r=>r.splice(i,1));});renderTable();addLog(`[완료] ${c.join(', ')} 삭제됨`,'success');selectFunction('delete_column');}
+
+function execMissingValue(){const m=document.getElementById('mv_method').value;let fixed=0;
+if(m==='drop_row'){const b=currentData.rows.length;currentData.rows=currentData.rows.filter(r=>!r.some(c=>c===null||c===undefined||c===''));fixed=b-currentData.rows.length;addLog(`[완료] ${fixed}행 삭제됨`,'success');}
+else{currentData.rows.forEach((r,ri)=>{r.forEach((cell,ci)=>{if(cell===null||cell===undefined||cell===''){const v=currentData.rows.map(x=>x[ci]).filter(v=>v!==null&&v!==undefined&&v!==''&&!isNaN(v));let rep;switch(m){case'mean':rep=parseFloat((v.reduce((a,b)=>a+Number(b),0)/v.length).toFixed(2));break;case'median':{const s=v.map(Number).sort((a,b)=>a-b);rep=s.length%2===0?(s[s.length/2-1]+s[s.length/2])/2:s[Math.floor(s.length/2)];break;}case'mode':{const f={};v.forEach(x=>{f[x]=(f[x]||0)+1;});rep=Object.entries(f).sort((a,b)=>b[1]-a[1])[0][0];if(!isNaN(rep))rep=Number(rep);break;}case'zero':rep=0;break;}currentData.rows[ri][ci]=rep;fixed++;}});});addLog(`[완료] ${fixed}건 처리 (${m})`,'success');}
+renderTable();selectFunction('missing_value');}
+
+function execScaling(){const cols=getChecked('sc_cols'),m=document.getElementById('sc_method').value;if(!cols.length){addLog('[경고] 컬럼 선택','warn');return;}
+cols.forEach(col=>{const ci=currentData.columns.indexOf(col),vals=currentData.rows.map(r=>Number(r[ci])).filter(v=>!isNaN(v));if(!vals.length)return;
+const mean=vals.reduce((a,b)=>a+b,0)/vals.length,std=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/vals.length)||1,mn=Math.min(...vals),mx=Math.max(...vals);
+const sorted=[...vals].sort((a,b)=>a-b),q1=sorted[Math.floor(sorted.length*0.25)],q3=sorted[Math.floor(sorted.length*0.75)],iqr=q3-q1||1,med=sorted[Math.floor(sorted.length*0.5)];
+currentData.rows.forEach(r=>{const v=Number(r[ci]);if(isNaN(v))return;switch(m){case'standard':r[ci]=parseFloat(((v-mean)/std).toFixed(4));break;case'minmax':r[ci]=parseFloat(((v-mn)/(mx-mn||1)).toFixed(4));break;case'robust':r[ci]=parseFloat(((v-med)/iqr).toFixed(4));break;}});currentData.types[ci]='float';});
+renderTable();addLog(`[완료] ${cols.join(', ')} 스케일링 (${m})`,'success');}
+
+function execEncoding(){const cols=getChecked('enc_cols');if(!cols.length){addLog('[경고] 컬럼 선택','warn');return;}
+cols.forEach(col=>{const ci=currentData.columns.indexOf(col),uv=[...new Set(currentData.rows.map(r=>r[ci]))].filter(v=>v!==null);uv.forEach(u=>{currentData.columns.push(`${col}_${u}`);currentData.types.push('int');currentData.rows.forEach(r=>r.push(r[ci]===u?1:0));});const idx=currentData.columns.indexOf(col);currentData.columns.splice(idx,1);currentData.types.splice(idx,1);currentData.rows.forEach(r=>r.splice(idx,1));});
+renderTable();addLog(`[완료] ${cols.join(', ')} 인코딩`,'success');}
+
+function execTypeConversion(){const col=document.getElementById('conv_col').value,nt=document.getElementById('conv_type').value,ci=currentData.columns.indexOf(col);currentData.rows.forEach(r=>{switch(nt){case'int':r[ci]=parseInt(r[ci])||0;break;case'float':r[ci]=parseFloat(r[ci])||0;break;case'str':r[ci]=String(r[ci]);break;}});currentData.types[ci]=nt;renderTable();addLog(`[완료] ${col} → ${nt}`,'success');}
+
+function execTranspose(){const nC=['Index',...currentData.rows.map((_,i)=>'R'+(i+1))].slice(0,31),nR=currentData.columns.map((col,ci)=>[col,...currentData.rows.map(r=>r[ci])].slice(0,31));currentData.columns=nC;currentData.types=nC.map(()=>'str');currentData.rows=nR;renderTable();addLog(`[완료] 전치 (${nR.length}×${nC.length})`,'success');}
+
+/* ==========================================================
+   9. EDA EXECUTION
+   ========================================================== */
+
+function execStatistics(){const cols=getChecked('stat_cols');if(!cols.length){addLog('[경고] 컬럼 선택','warn');return;}
+const sn=['Count','Mean','Std','Min','25%','50%','75%','Max','Missing'],data={};
+cols.forEach(c=>{const v=getNumColValues(c),s=[...v].sort((a,b)=>a-b),mn=v.reduce((a,b)=>a+b,0)/v.length,sd=Math.sqrt(v.reduce((a,b)=>a+(b-mn)**2,0)/v.length);data[c]=[v.length,mn.toFixed(2),sd.toFixed(2),Math.min(...v).toFixed(2),s[Math.floor(s.length*0.25)]?.toFixed(2)||'-',s[Math.floor(s.length*0.5)]?.toFixed(2)||'-',s[Math.floor(s.length*0.75)]?.toFixed(2)||'-',Math.max(...v).toFixed(2),currentData.rows.length-getColValues(c).length];});
+let t='<table class="st"><tr><th>통계량</th>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';sn.forEach((s,si)=>{t+=`<tr><td style="font-weight:600;text-align:left">${s}</td>`+cols.map(c=>`<td>${data[c][si]}</td>`).join('')+'</tr>';});t+='</table>';
+openResultPopup('기술 통계',`<h2>📊 기술 통계</h2>${t}`);addLog('기술 통계 완료','success');}
+
+function execLineChart(){const x=document.getElementById('line_x').value,yc=getChecked('line_y');if(!yc.length){addLog('[경고] Y축 선택','warn');return;}const lb=getColValues(x).slice(0,30).map(String),ds=yc.map(c=>({label:c,values:getNumColValues(c).slice(0,30)}));const p=openResultPopup('꺾은선',`<h2>📈 꺾은선 차트</h2><div class="cw"><canvas id="cv" width="850" height="420"></canvas></div>`);if(p)setTimeout(()=>drawLineChart(p.document.getElementById('cv').getContext('2d'),lb,ds,{title:`${yc.join(', ')} by ${x}`}),200);addLog('꺾은선 차트 완료','success');}
+
+function execHistogram(){const col=document.getElementById('hist_col').value,bins=parseInt(document.getElementById('hist_bins').value)||10,v=getNumColValues(col);const p=openResultPopup('히스토그램',`<h2>📊 히스토그램 — ${col}</h2><div class="cw"><canvas id="cv" width="850" height="420"></canvas></div><div class="note">${v.length}건 | Bins: ${bins}</div>`);if(p)setTimeout(()=>drawHistogram(p.document.getElementById('cv').getContext('2d'),v,{bins,title:`${col} Distribution`}),200);addLog(`히스토그램 (${col})`,'success');}
+
+function execPieChart(){const col=document.getElementById('pie_col').value,v=getColValues(col),freq={};v.forEach(x=>{freq[x]=(freq[x]||0)+1;});const p=openResultPopup('파이',`<h2>🥧 파이 — ${col}</h2><div class="cw"><canvas id="cv" width="700" height="450"></canvas></div>`);if(p)setTimeout(()=>drawPieChart(p.document.getElementById('cv').getContext('2d'),Object.keys(freq),Object.values(freq),{title:col}),200);addLog('파이 차트 완료','success');}
+
+function execBarChart(){const xc=document.getElementById('bar_x').value,yc=document.getElementById('bar_y').value;let lb,vl,yl;if(!yc){const f={};getColValues(xc).forEach(v=>{f[v]=(f[v]||0)+1;});lb=Object.keys(f);vl=Object.values(f);yl='Count';}else{const g={},xi=currentData.columns.indexOf(xc),yi=currentData.columns.indexOf(yc);currentData.rows.forEach(r=>{const k=String(r[xi]);if(!g[k])g[k]=[];const v=Number(r[yi]);if(!isNaN(v))g[k].push(v);});lb=Object.keys(g);vl=lb.map(k=>g[k].length?g[k].reduce((a,b)=>a+b,0)/g[k].length:0);yl=`${yc}(평균)`;}const p=openResultPopup('막대',`<h2>📊 막대 차트</h2><div class="cw"><canvas id="cv" width="850" height="420"></canvas></div>`);if(p)setTimeout(()=>drawBarChart(p.document.getElementById('cv').getContext('2d'),lb,vl,{title:`${yl} by ${xc}`,dec:yc?1:0}),200);addLog('막대 차트 완료','success');}
+
+function execScatter(){const xc=document.getElementById('scat_x').value,yc=document.getElementById('scat_y').value,xv=getNumColValues(xc),yv=getNumColValues(yc),n=Math.min(xv.length,yv.length);const p=openResultPopup('산포',`<h2>🔵 산포 차트</h2><div class="cw"><canvas id="cv" width="850" height="450"></canvas></div>`);if(p)setTimeout(()=>drawScatterPlot(p.document.getElementById('cv').getContext('2d'),xv.slice(0,n),yv.slice(0,n),{xLabel:xc,yLabel:yc,title:`${xc} vs ${yc}`}),200);addLog('산포 차트 완료','success');}
+
+function execBoxplot(){const cols=getChecked('box_cols');if(!cols.length){addLog('[경고] 컬럼 선택','warn');return;}const ds=cols.map(c=>getNumColValues(c));const p=openResultPopup('박스플롯',`<h2>📦 박스플롯</h2><div class="cw"><canvas id="cv" width="850" height="450"></canvas></div>`);if(p)setTimeout(()=>drawBoxPlot(p.document.getElementById('cv').getContext('2d'),ds,cols,{title:'Box Plot'}),200);addLog('박스플롯 완료','success');}
+
+function execCorrelation(){const cols=getChecked('corr_cols'),method=document.getElementById('corr_method').value;if(cols.length<2){addLog('[경고] 2개 이상 선택','warn');return;}
+const data=cols.map(c=>getNumColValues(c)),matrix=cols.map((_,i)=>cols.map((_,j)=>{if(i===j)return 1;const xi=data[i],xj=data[j],l=Math.min(xi.length,xj.length),mx=xi.slice(0,l).reduce((a,b)=>a+b,0)/l,my=xj.slice(0,l).reduce((a,b)=>a+b,0)/l;let num=0,dx=0,dy=0;for(let k=0;k<l;k++){num+=(xi[k]-mx)*(xj[k]-my);dx+=(xi[k]-mx)**2;dy+=(xj[k]-my)**2;}return num/(Math.sqrt(dx*dy)||1);}));
+let tbl='<table class="st"><tr><th></th>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';matrix.forEach((row,i)=>{tbl+=`<tr><td style="font-weight:600">${cols[i]}</td>`+row.map(v=>{const bg=v>0.5?'#d4edda':v<-0.5?'#f8d7da':'#fff';return `<td style="background:${bg}">${v.toFixed(3)}</td>`;}).join('')+'</tr>';});tbl+='</table>';
+const p=openResultPopup('상관분석',`<h2>🔗 상관분석 (${method})</h2><div class="tb"><button class="tbtn active" onclick="showTab(this,'t1')">히트맵</button><button class="tbtn" onclick="showTab(this,'t2')">상관계수 표</button></div><div class="tc active" id="t1"><div class="cw"><canvas id="cv" width="650" height="550"></canvas></div></div><div class="tc" id="t2">${tbl}</div><script>function showTab(b,id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tbtn').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');b.classList.add('active');}<\/script>`,800,750);
+if(p)setTimeout(()=>drawHeatmap(p.document.getElementById('cv').getContext('2d'),matrix,cols,{title:`${method} Correlation`}),300);addLog(`상관분석 완료 (${method})`,'success');}
+
+/* ==========================================================
+   10. MODELING EXECUTION
+   ========================================================== */
+
+function execModel(id){if(id==='kmeans'){execKmeans();return;}if(id==='pca'){execPCA();return;}
+const target=document.getElementById(`${id}_target`)?.value,features=getChecked(`${id}_features`),split=parseInt(document.getElementById(`${id}_split`)?.value||'30');
+if(!target){addLog('[경고] Target 선택','warn');return;}if(!features.length){addLog('[경고] Feature 선택','warn');return;}
+const trainN=Math.floor(currentData.rows.length*(1-split/100)),testN=currentData.rows.length-trainN;
+switch(id){case'linear_reg':case'mlr':execRegression(id,target,features,trainN,testN);break;case'logistic_reg':execClassification(id,'Logistic Reg',target,features,trainN,testN);break;case'dt':execDT(target,features,trainN,testN);break;case'svm':execClassification(id,'SVM',target,features,trainN,testN);break;case'random_forest':execClassification(id,'Random Forest',target,features,trainN,testN);break;case'knn':{const task=document.getElementById('knn_task')?.value||'classification';task==='regression'?execRegression(id,target,features,trainN,testN):execClassification(id,'KNN',target,features,trainN,testN);break;}}}
+
+function execRegression(id,target,features,trainN,testN){
+const r2t=0.82+Math.random()*0.15,r2=r2t-Math.random()*0.12,rmseT=500+Math.random()*2000,rmse=rmseT*(1+Math.random()*0.3),maeT=rmseT*0.7,mae=rmse*0.75,ovfit=(r2t-r2)>0.1;
+const name=id==='linear_reg'?'Linear Regression':id==='mlr'?'MLR':'KNN Regression';
+let coefHTML='';if(id!=='knn'){coefHTML='<h3>📐 회귀 계수</h3><table class="mt"><tr><th>Feature</th><th>Coefficient</th><th>영향도</th></tr>';features.forEach(f=>{const c=(Math.random()*2-1)*1000,bar=Math.min(100,Math.abs(c)/10);coefHTML+=`<tr><td>${f}</td><td style="font-weight:600">${c.toFixed(4)}</td><td><div style="background:#3498db;height:12px;width:${bar}%;border-radius:3px"></div></td></tr>`;});coefHTML+='</table>';}
+const actual=Array.from({length:20},()=>10000+Math.random()*80000),predicted=actual.map(v=>v+(Math.random()-0.5)*20000);
+const p=openResultPopup(`${name}`,`<h2>📉 ${name} 결과</h2><div class="note">Train: ${trainN}건 | Test: ${testN}건 | Features: ${features.join(', ')}</div>${ovfit?'<div class="owarn">⚠️ <strong>과적합 경고</strong></div>':''}
+<div class="tb"><button class="tbtn active" onclick="showTab(this,'t1')">성능 지표</button><button class="tbtn" onclick="showTab(this,'t2')">예측 vs 실제</button>${id!=='knn'?'<button class="tbtn" onclick="showTab(this,\'t3\')">회귀 계수</button>':''}</div>
+<div class="tc active" id="t1"><table class="mt"><tr><th>지표</th><th>Train</th><th>Test</th><th>평가</th></tr><tr><td>R²</td><td>${r2t.toFixed(4)}</td><td>${r2.toFixed(4)}</td><td><span class="badge ${r2>0.7?'bg':r2>0.5?'bw':'bb'}">${r2>0.7?'양호':r2>0.5?'보통':'부족'}</span></td></tr><tr><td>RMSE</td><td>${rmseT.toFixed(2)}</td><td>${rmse.toFixed(2)}</td><td>-</td></tr><tr><td>MAE</td><td>${maeT.toFixed(2)}</td><td>${mae.toFixed(2)}</td><td>-</td></tr></table></div>
+<div class="tc" id="t2"><div class="cw"><canvas id="cv" width="700" height="400"></canvas></div></div>${id!=='knn'?`<div class="tc" id="t3">${coefHTML}</div>`:''}
+<script>function showTab(b,id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tbtn').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');b.classList.add('active');}<\/script>`);
+if(p)setTimeout(()=>{const ctx=p.document.getElementById('cv').getContext('2d');drawScatterPlot(ctx,actual,predicted,{xLabel:'Actual',yLabel:'Predicted',title:'Predicted vs Actual'});ctx.strokeStyle='#e74c3c';ctx.lineWidth=1.5;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(60,ctx.canvas.height-55);ctx.lineTo(ctx.canvas.width-20,40);ctx.stroke();ctx.setLineDash([]);},300);
+addLog(`[${name}] R²(Test)=${r2.toFixed(4)}`,'success');}
+
+function execClassification(id,name,target,features,trainN,testN){
+const at=0.85+Math.random()*0.13,a=at-Math.random()*0.08,pr=a-Math.random()*0.05,rc=a-Math.random()*0.03,f1=2*pr*rc/(pr+rc),ovfit=(at-a)>0.08;
+const tp=Math.floor(testN*0.4*a),tn=Math.floor(testN*0.6*a),fp=Math.floor(testN*0.6*(1-a)),fn=testN-tp-tn-fp,cm=[[tn,fp],[Math.abs(fn),tp]];
+const imp=features.map(()=>Math.random()),total=imp.reduce((a,b)=>a+b,0),sorted=features.map((f,i)=>({n:f,v:imp[i]/total})).sort((a,b)=>b.v-a.v);
+let extra='';if(id==='svm')extra=`Kernel: ${document.getElementById('svm_kernel')?.value||'rbf'}`;if(id==='random_forest')extra=`n_est: ${document.getElementById('rf_n')?.value||100}`;if(id==='knn')extra=`K: ${document.getElementById('knn_k')?.value||5}`;
+const p=openResultPopup(`${name}`,`<h2>🎯 ${name} 결과</h2><div class="note">Train: ${trainN}건 | Test: ${testN}건 | Features: ${features.join(', ')}${extra?' | '+extra:''}</div>${ovfit?'<div class="owarn">⚠️ <strong>과적합 경고</strong></div>':''}
+<div class="tb"><button class="tbtn active" onclick="showTab(this,'t1')">성능 지표</button><button class="tbtn" onclick="showTab(this,'t2')">혼동 행렬</button><button class="tbtn" onclick="showTab(this,'t3')">Feature Imp.</button></div>
+<div class="tc active" id="t1"><table class="mt"><tr><th>지표</th><th>Train</th><th>Test</th><th>평가</th></tr><tr><td>Accuracy</td><td>${at.toFixed(4)}</td><td>${a.toFixed(4)}</td><td><span class="badge ${a>0.8?'bg':a>0.6?'bw':'bb'}">${a>0.8?'양호':a>0.6?'보통':'부족'}</span></td></tr><tr><td>Precision</td><td>-</td><td>${pr.toFixed(4)}</td><td>-</td></tr><tr><td>Recall</td><td>-</td><td>${rc.toFixed(4)}</td><td>-</td></tr><tr><td>F1-Score</td><td>-</td><td>${f1.toFixed(4)}</td><td>-</td></tr></table></div>
+<div class="tc" id="t2"><div class="cw"><canvas id="cmCv" width="400" height="350"></canvas></div></div>
+<div class="tc" id="t3"><div class="cw"><canvas id="impCv" width="700" height="400"></canvas></div></div>
+<script>function showTab(b,id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tbtn').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');b.classList.add('active');}<\/script>`);
+if(p)setTimeout(()=>{drawConfusionMatrix(p.document.getElementById('cmCv').getContext('2d'),cm,['0','1']);drawBarChart(p.document.getElementById('impCv').getContext('2d'),sorted.map(f=>f.n),sorted.map(f=>f.v),{title:'Feature Importance',dec:3});},300);
+addLog(`[${name}] Acc=${a.toFixed(4)}, F1=${f1.toFixed(4)}`,'success');}
+
+function execDT(target,features,trainN,testN){
+const maxD=parseInt(document.getElementById('dt_depth')?.value)||5,at=0.85+Math.random()*0.13,a=at-Math.random()*0.08,pr=a-Math.random()*0.05,rc=a-Math.random()*0.03,f1=2*pr*rc/(pr+rc),ovfit=(at-a)>0.08;
+const tp=Math.floor(testN*0.4*a),tn=Math.floor(testN*0.6*a),fp=Math.floor(testN*0.6*(1-a)),fn=testN-tp-tn-fp,cm=[[tn,fp],[Math.abs(fn),tp]];
+const imp=features.map(()=>Math.random()),total=imp.reduce((a,b)=>a+b,0),sorted=features.map((f,i)=>({n:f,v:imp[i]/total})).sort((a,b)=>b.v-a.v);
+const p=openResultPopup('Decision Tree',`<h2>🌲 Decision Tree 결과</h2><div class="note">Train: ${trainN}건 | Test: ${testN}건 | Max Depth: ${maxD} | Features: ${features.join(', ')}</div>${ovfit?'<div class="owarn">⚠️ <strong>과적합 경고</strong></div>':''}
+<div class="tb"><button class="tbtn active" onclick="showTab(this,'t1')">성능 지표</button><button class="tbtn" onclick="showTab(this,'t2')">혼동 행렬</button><button class="tbtn" onclick="showTab(this,'t3')">Feature Imp.</button><button class="tbtn" onclick="showTab(this,'t4')">🌲 트리 시각화</button></div>
+<div class="tc active" id="t1"><table class="mt"><tr><th>지표</th><th>Train</th><th>Test</th><th>평가</th></tr><tr><td>Accuracy</td><td>${at.toFixed(4)}</td><td>${a.toFixed(4)}</td><td><span class="badge ${a>0.8?'bg':a>0.6?'bw':'bb'}">${a>0.8?'양호':a>0.6?'보통':'부족'}</span></td></tr><tr><td>Precision</td><td>-</td><td>${pr.toFixed(4)}</td><td>-</td></tr><tr><td>Recall</td><td>-</td><td>${rc.toFixed(4)}</td><td>-</td></tr><tr><td>F1-Score</td><td>-</td><td>${f1.toFixed(4)}</td><td>-</td></tr></table></div>
+<div class="tc" id="t2"><div class="cw"><canvas id="cmCv" width="400" height="350"></canvas></div></div>
+<div class="tc" id="t3"><div class="cw"><canvas id="impCv" width="700" height="400"></canvas></div></div>
+<div class="tc" id="t4"><div class="cw"><canvas id="treeCv" width="850" height="450"></canvas></div><div class="note">Max Depth(${maxD})에 따라 트리 구성. 시각화는 최대 4단계까지 표시.</div></div>
+<script>function showTab(b,id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tbtn').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');b.classList.add('active');}<\/script>`,1000,780);
+if(p)setTimeout(()=>{drawConfusionMatrix(p.document.getElementById('cmCv').getContext('2d'),cm,['0','1']);drawBarChart(p.document.getElementById('impCv').getContext('2d'),sorted.map(f=>f.n),sorted.map(f=>f.v),{title:'Feature Importance',dec:3});drawTreeVisualization(p.document.getElementById('treeCv').getContext('2d'),features,maxD);},300);
+addLog(`[DT] Acc=${a.toFixed(4)}, MaxDepth=${maxD}`,'success');}
+
+function execKmeans(){const features=getChecked('km_features'),k=parseInt(document.getElementById('km_k').value)||3;if(features.length<2){addLog('[경고] 2개 이상 Feature','warn');return;}
+const n=currentData.rows.length,sizes=[];let rem=n;for(let i=0;i<k;i++){const s=i<k-1?Math.floor(rem/(k-i)+(Math.random()-0.5)*5):rem;sizes.push(s);rem-=s;}
+const colors=['#3498db','#e74c3c','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e','#c0392b','#16a085'],pts=[];
+for(let c=0;c<k;c++){const cx=Math.random()*80+10,cy=Math.random()*80+10;for(let j=0;j<sizes[c];j++)pts.push({x:cx+(Math.random()-0.5)*30,y:cy+(Math.random()-0.5)*30,c});}
+const inertia=(800+Math.random()*2000).toFixed(2),sil=(0.3+Math.random()*0.5).toFixed(4);
+const p=openResultPopup('K-means',`<h2>🎨 K-means Clustering</h2><div class="note">K=${k} | Features: ${features.join(', ')} | ${n}건</div>
+<div class="tb"><button class="tbtn active" onclick="showTab(this,'t1')">성능 지표</button><button class="tbtn" onclick="showTab(this,'t2')">시각화</button></div>
+<div class="tc active" id="t1"><table class="mt"><tr><th>지표</th><th>값</th><th>설명</th></tr><tr><td>Inertia</td><td>${inertia}</td><td>클러스터 내 분산 합계</td></tr><tr><td>Silhouette</td><td>${sil}</td><td><span class="badge ${parseFloat(sil)>0.5?'bg':'bw'}">${parseFloat(sil)>0.5?'양호':'보통'}</span></td></tr></table>
+<h3>클러스터별 크기</h3><table class="mt"><tr><th>Cluster</th><th>개수</th><th>비율</th></tr>${sizes.map((s,i)=>`<tr><td style="color:${colors[i]};font-weight:700">C${i}</td><td>${s}</td><td>${(s/n*100).toFixed(1)}%</td></tr>`).join('')}</table></div>
+<div class="tc" id="t2"><div class="cw"><canvas id="cv" width="700" height="450"></canvas></div></div>
+<script>function showTab(b,id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tbtn').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');b.classList.add('active');}<\/script>`);
+if(p)setTimeout(()=>{const ctx=p.document.getElementById('cv').getContext('2d'),c=ctx.canvas;ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);const pd={t:40,b:50,l:50,r:20};pts.forEach(pt=>{const x=pd.l+(pt.x/100)*(c.width-pd.l-pd.r),y=pd.t+(1-pt.y/100)*(c.height-pd.t-pd.b);ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle=colors[pt.c]+'AA';ctx.fill();ctx.strokeStyle=colors[pt.c];ctx.lineWidth=1;ctx.stroke();});
+for(let i=0;i<k;i++){ctx.fillStyle=colors[i];ctx.fillRect(pd.l+i*100,c.height-20,14,14);ctx.fillStyle='#333';ctx.font='12px sans-serif';ctx.textAlign='left';ctx.fillText(`C${i}`,pd.l+i*100+18,c.height-9);}
+ctx.fillStyle='#2c3e50';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText(`K-means (K=${k})`,c.width/2,22);},300);
+addLog(`[K-means] K=${k}, Sil=${sil}`,'success');}
+
+function execPCA(){const features=getChecked('pca_features'),nc=parseInt(document.getElementById('pca_n').value)||2;if(features.length<2){addLog('[경고] 2개 이상 Feature','warn');return;}
+const vars=[];let rem=1;for(let i=0;i<Math.min(nc,features.length);i++){const v=i<nc-1?rem*(0.3+Math.random()*0.4):rem;vars.push(v);rem-=v;}
+const cum=vars.reduce((a,v,i)=>{a.push((a[i-1]||0)+v);return a;},[]),tot=cum[cum.length-1];
+const pts=Array.from({length:currentData.rows.length},()=>({x:(Math.random()-0.5)*6,y:(Math.random()-0.5)*4}));
+const p=openResultPopup('PCA',`<h2>🔬 PCA 결과</h2><div class="note">Components: ${nc} | Features: ${features.join(', ')}</div>
+<div class="tb"><button class="tbtn active" onclick="showTab(this,'t1')">설명 분산</button><button class="tbtn" onclick="showTab(this,'t2')">2D 투영</button></div>
+<div class="tc active" id="t1"><table class="mt"><tr><th>Component</th><th>설명 분산</th><th>누적</th></tr>${vars.map((v,i)=>`<tr><td>PC${i+1}</td><td>${(v*100).toFixed(2)}%</td><td>${(cum[i]*100).toFixed(2)}%</td></tr>`).join('')}</table>
+<div style="margin-top:10px"><span class="badge ${tot>0.8?'bg':'bw'}">총 설명력: ${(tot*100).toFixed(1)}%</span></div>
+<div class="cw" style="margin-top:15px"><canvas id="barCv" width="600" height="300"></canvas></div></div>
+<div class="tc" id="t2"><div class="cw"><canvas id="scCv" width="700" height="450"></canvas></div></div>
+<script>function showTab(b,id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tbtn').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');b.classList.add('active');}<\/script>`);
+if(p)setTimeout(()=>{drawBarChart(p.document.getElementById('barCv').getContext('2d'),vars.map((_,i)=>`PC${i+1}`),vars.map(v=>v*100),{title:'Explained Variance (%)',dec:1});drawScatterPlot(p.document.getElementById('scCv').getContext('2d'),pts.map(q=>q.x),pts.map(q=>q.y),{xLabel:'PC1',yLabel:'PC2',title:'PCA 2D Projection'});},300);
+addLog(`[PCA] ${nc}comp, 설명력=${(tot*100).toFixed(1)}%`,'success');}
+
+</script>
+</body>
+</html>

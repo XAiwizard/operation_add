@@ -1,0 +1,175 @@
+/* ============================================================
+   XAI Wizard v3.1 — Stylesheet
+   ============================================================ */
+
+/* 0. Reset & Base */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+    background: #f0f2f5;
+    color: #333;
+}
+
+/* Factory-specific layout — fits below NavBar, no page scroll */
+.factory-layout { height: calc(100vh - 48px); overflow: hidden; }
+
+/* 1. Grid Layout */
+.workspace-container {
+    display: grid;
+    grid-template-columns: 260px 1fr 340px;
+    grid-template-rows: 56px 1fr;
+    height: 100%;
+    width: 100vw;
+}
+
+/* 2. Header */
+.header {
+    grid-column: 1 / -1;
+    background: #2c3e50;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 10;
+}
+.brand { font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.project-info-container { display: flex; align-items: center; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; }
+.project-title { font-size: 0.95rem; margin-right: 10px; }
+.edit-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.9rem; }
+.edit-btn:hover { color: #fff; }
+
+/* 3. Sidebar */
+.sidebar { background: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; overflow-y: auto; }
+.accordion-item { border-bottom: 1px solid #eee; }
+.accordion-header { padding: 13px 18px; cursor: pointer; font-weight: 600; color: #2c3e50; background: #f8f9fa; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; font-size: 0.92rem; }
+.accordion-header:hover { background: #e9ecef; }
+.accordion-header.active { background: #3498db; color: #fff; }
+.accordion-body { display: none; background: #fff; padding: 8px; }
+.accordion-body.open { display: block; }
+.sidebar-form { background: #fdfdfd; border: 1px solid #eee; padding: 10px; border-radius: 6px; margin-bottom: 8px; font-size: 0.88rem; }
+.sidebar-label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.83rem; }
+.sidebar-input, .sidebar-select { width: 100%; padding: 5px; margin-bottom: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; }
+.sidebar-btn { width: 100%; padding: 7px; background: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.83rem; }
+.sidebar-btn:hover { background: #2980b9; }
+.menu-btn { display: block; width: 100%; padding: 9px 10px 9px 15px; border: none; background: none; text-align: left; cursor: pointer; color: #555; font-size: 0.87rem; transition: all 0.2s; border-radius: 4px; }
+.menu-btn:hover { background: #e8f4fc; color: #3498db; }
+.menu-btn.active-func { background: #e8f4fc; color: #3498db; font-weight: 700; border-left: 3px solid #3498db; }
+
+/* 4. Main Content & Data Table */
+.main-content { background: #edf2f7; padding: 15px; overflow: hidden; display: flex; flex-direction: column; }
+.panel-box { background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.panel-header { padding: 12px 15px; border-bottom: 1px solid #eee; font-weight: 700; color: #2c3e50; display: flex; justify-content: space-between; align-items: center; font-size: 0.92rem; }
+.data-grid-container { flex: 1; overflow: auto; }
+table.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+table.data-table th, table.data-table td { padding: 8px 10px; border: 1px solid #eee; text-align: left; white-space: nowrap; }
+table.data-table th { background: #f8f9fa; position: sticky; top: 0; z-index: 1; font-size: 0.83rem; }
+
+/* 5. Right Panel */
+.right-panel { background: #fff; border-left: 1px solid #ddd; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+.control-panel { flex: 1; border-bottom: 2px solid #ddd; display: flex; flex-direction: column; min-height: 0; }
+.control-header { padding: 12px 15px; background: #34495e; color: #fff; font-weight: 600; font-size: 0.9rem; flex-shrink: 0; }
+.control-body { padding: 15px; overflow-y: auto; flex: 1; min-height: 0; }
+.result-panel { flex-shrink: 0; height: 200px; background: #1e272e; color: #00ff88; display: flex; flex-direction: column; overflow-y: auto; font-family: 'Consolas','Courier New',monospace; font-size: 0.82em; }
+.result-header { padding: 8px 15px; background: #111; color: #fff; border-bottom: 1px solid #333; font-weight: 600; display: flex; justify-content: space-between; font-size: 0.85rem; }
+
+/* 6. Form Controls */
+.form-group { margin-bottom: 12px; }
+.form-label { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; font-weight: 600; font-size: 0.85rem; color: #555; }
+.form-select, .form-input { width: 100%; padding: 7px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; }
+.btn-action { width: 100%; padding: 10px; background: #3498db; color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: background 0.2s; font-size: 0.9rem; }
+.btn-action:hover { background: #2980b9; }
+.btn-danger { background: #e74c3c; }
+.btn-danger:hover { background: #c0392b; }
+.btn-success { background: #27ae60; }
+.btn-success:hover { background: #229954; }
+.var-list { border: 1px solid #ddd; border-radius: 4px; max-height: 130px; overflow-y: auto; padding: 4px; background: #fafafa; }
+.var-item { display: flex; align-items: center; padding: 4px 6px; cursor: pointer; font-size: 0.85rem; }
+.var-item:hover { background: #eee; }
+.var-item input { margin-right: 6px; }
+.empty-state { text-align: center; color: #aaa; padding: 40px 20px; font-size: 0.9rem; }
+
+/* 7. Info / Warning */
+.info-box { background: #eaf6ff; border: 1px solid #b8daff; border-radius: 4px; padding: 8px 10px; margin-bottom: 10px; font-size: 0.83rem; color: #004085; }
+.warn-box { background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px 10px; margin-bottom: 10px; font-size: 0.83rem; color: #856404; }
+
+/* 8. Log Items */
+.log-item { padding: 6px 12px; border-bottom: 1px solid #333; font-size: 0.82rem; }
+.log-time { color: #888; font-size: 0.78em; margin-right: 8px; }
+.log-success { color: #00ff88; }
+.log-info { color: #3498db; }
+.log-warn { color: #f39c12; }
+
+/* 9. Tooltip (Portal 방식 — ::after 대신 React createPortal 사용) */
+.tip { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: #bdc3c7; color: #fff; font-size: 10px; font-weight: 700; cursor: help; flex-shrink: 0; line-height: 1; }
+
+/* 10. Badge */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.82rem; font-weight: 600; }
+.bg { background: #d4edda; color: #155724; }
+.bw { background: #fff3cd; color: #856404; }
+.bb { background: #f8d7da; color: #721c24; }
+
+/* 11. Top Navigation Bar */
+.top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #1a252f;
+    color: #fff;
+    padding: 0 20px;
+    height: 48px;
+    font-size: 0.88rem;
+}
+.top-nav .brand { font-size: 1.05rem; }
+.nav-links { display: flex; gap: 4px; }
+.nav-link {
+    padding: 8px 16px;
+    color: #adb5bd;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.88rem;
+    transition: all 0.2s;
+}
+.nav-link:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.nav-link.active { color: #fff; background: #3498db; font-weight: 600; }
+.user-info { font-size: 0.85rem; color: #adb5bd; }
+
+/* 12. Home Page */
+.home-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 48px);
+    padding: 40px;
+}
+.home-page h1 { font-size: 2.2rem; color: #2c3e50; margin-bottom: 40px; }
+.menu-grid { display: grid; grid-template-columns: repeat(2, 280px); gap: 24px; }
+.menu-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 32px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+.menu-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.12); transform: translateY(-3px); }
+.menu-card .menu-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+.menu-card h2 { font-size: 1.15rem; color: #2c3e50; margin-bottom: 8px; }
+.menu-card p { font-size: 0.88rem; color: #7f8c8d; }
+
+/* 13. Page Container (for non-factory pages) */
+.page-container { padding: 30px; max-width: 1200px; margin: 0 auto; }
+.page-container h1 { font-size: 1.5rem; color: #2c3e50; margin-bottom: 20px; }
+
+/* 14. Form checkbox toggle */
+.form-checkbox { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 0.85rem; cursor: pointer; }
+.form-checkbox input { margin: 0; }
+
+/* 15. Select all / deselect */
+.select-actions { display: flex; gap: 8px; margin-bottom: 6px; }
+.select-actions button { background: none; border: 1px solid #ddd; padding: 3px 8px; border-radius: 3px; font-size: 0.78rem; cursor: pointer; color: #555; }
+.select-actions button:hover { background: #e8f4fc; color: #3498db; }

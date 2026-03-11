@@ -1,0 +1,428 @@
+================================================================================
+  XAI Wizard — 백엔드 & DB 전체 설계 계획서
+  작성일: 2026-03-09
+================================================================================
+
+[1] 프로젝트 현황 요약
+================================================================================
+
+  완료: 프론트엔드 5개 페이지, 전처리(6)/EDA(8)/모델링(9) 컨트롤 UI
+  미완: DB 설계, 백엔드 API 완성, 프론트-백엔드 연동
+
+  배포환경: 인트라넷 (인터넷 불가)
+  개발환경: 인터넷 가능
+  프론트: React 19 (port 3000)
+  백엔드: FastAPI (port 8000)
+  DB: SQLite (개발) → Oracle 10g (운영)
+
+
+[2] 데이터베이스 설계
+================================================================================
+
+  ※ 개발: SQLite / 운영: Oracle 10g 호환 설계
+  ※ 모든 테이블명: TB_ 접두사, 컬럼명: SNAKE_CASE
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  2-1. TB_PROJECT (프로젝트 관리)
+  ─────────────────────────────────────────────────────────
+  컬럼명              타입              설명
+  ─────────────────────────────────────────────────────────
+  PROJECT_ID          TEXT PK          UUID (예: proj_20260309_001)
+  PROJECT_NM          TEXT NOT NULL    프로젝트명
+  DESCRIPTION         TEXT             설명
+  CREATED_BY          TEXT             생성자
+  CREATED_AT          TEXT             생성일시 (ISO 8601)
+  UPDATED_AT          TEXT             수정일시
+  STATUS              TEXT             상태 (ACTIVE / ARCHIVED)
+  ─────────────────────────────────────────────────────────
+
+  2-2. TB_DATASET (데이터셋 메타)
+  ─────────────────────────────────────────────────────────
+  컬럼명              타입              설명
+  ─────────────────────────────────────────────────────────
+  DATASET_ID          TEXT PK          UUID
+  PROJECT_ID          TEXT FK          TB_PROJECT 참조
+  DATASET_NM          TEXT NOT NULL    파일명 (customer_churn.csv)
+  ROW_CNT             INTEGER          행 수
+  COL_CNT             INTEGER          컬럼 수
+  FILE_SIZE           INTEGER          파일 크기 (bytes)
+  UPLOAD_AT           TEXT             업로드 일시
+  IS_PREPROCESSED     INTEGER          전처리 여부 (0/1)
+  ─────────────────────────────────────────────────────────
+
+  2-3. TB_COLUMN_MAP (컬럼 매핑) — 기존 테이블 확장
+  ─────────────────────────────────────────────────────────
+  컬럼명              타입              설명
+  ─────────────────────────────────────────────────────────
+  MAP_ID              INTEGER PK AI   자동증가
+  PROJECT_ID          TEXT FK          TB_PROJECT 참조
+  DATASET_ID          TEXT FK          TB_DATASET 참조
+  COL_ORDER           INTEGER          컬럼 순서 (0-based)
+  PHYSICAL_COL_NM     TEXT             물리 컬럼명 (A1, A2, ...)
+  LOGICAL_COL_NM      TEXT             논리 컬럼명 (원본명)
+  DATA_TYPE           TEXT             타입 (int/float/str/datetime)
+  IS_TARGET           INTEGER          타겟 변수 여부 (0/1)
+  ─────────────────────────────────────────────────────────
+
+  2-4. TB_DATA_{PROJECT_ID} (동적 데이터 테이블)
+  ─────────────────────────────────────────────────────────
+  ※ 프로젝트별 동적 생성
+  ※ 컬럼: ROW_ID(PK), A1, A2, A3, ... (모두 TEXT)
+  ※ TB_COLUMN_MAP에서 논리명 ↔ 물리명 매핑
+  ─────────────────────────────────────────────────────────
+
+  2-5. TB_PREPROCESS_LOG (전처리 이력)
+  ─────────────────────────────────────────────────────────
+  컬럼명              타입              설명
+  ─────────────────────────────────────────────────────────
+  LOG_ID              INTEGER PK AI   자동증가
+  PROJECT_ID          TEXT FK          TB_PROJECT 참조
+  DATASET_ID          TEXT FK          TB_DATASET 참조
+  ACTION              TEXT             전처리 종류
+  PARAMS              TEXT             파라미터 (JSON 문자열)
+  APPLIED_COLS        TEXT             적용 컬럼 (콤마 구분)
+  BEFORE_SHAPE        TEXT             전처리 전 shape "30x10"
+  AFTER_SHAPE         TEXT             전처리 후 shape "30x8"
+  EXECUTED_AT         TEXT             실행 일시
+  ─────────────────────────────────────────────────────────
+
+  2-6. TB_MODEL (모델 메타)
+  ─────────────────────────────────────────────────────────
+  컬럼명              타입              설명
+  ─────────────────────────────────────────────────────────
+  MODEL_ID            TEXT PK          UUID
+  PROJECT_ID          TEXT FK          TB_PROJECT 참조
+  MODEL_TYPE          TEXT NOT NULL    알고리즘명 (linear_reg 등)
+  MODEL_NM            TEXT             사용자 지정 모델명
+  TARGET_COL          TEXT             타겟 변수명
+  FEATURE_COLS        TEXT             피처 컬럼 (콤마 구분)
+  PARAMS              TEXT             하이퍼파라미터 (JSON)
+  METRICS             TEXT             평가지표 (JSON)
+  MODEL_BLOB          BLOB             직렬화된 모델 (pickle)
+  TRAIN_SIZE          INTEGER          학습 데이터 수
+  TEST_SIZE           INTEGER          테스트 데이터 수
+  CREATED_AT          TEXT             학습 일시
+  STATUS              TEXT             상태 (TRAINED/DEPLOYED/ARCHIVED)
+  ─────────────────────────────────────────────────────────
+
+  2-7. TB_FEATURE_STORE (학습용 데이터 저장소)
+  ─────────────────────────────────────────────────────────
+  컬럼명              타입              설명
+  ─────────────────────────────────────────────────────────
+  FS_ID               TEXT PK          UUID
+  DATASET_NM          TEXT NOT NULL    데이터셋명
+  DESCRIPTION         TEXT             설명
+  TABLE_NM            TEXT             실제 DB 테이블명
+  ROW_CNT             INTEGER          행 수
+  COL_CNT             INTEGER          컬럼 수
+  SCHEMA_INFO         TEXT             컬럼 스키마 (JSON)
+  CREATED_BY          TEXT             등록자
+  CREATED_AT          TEXT             등록일시
+  UPDATED_AT          TEXT             수정일시
+  ─────────────────────────────────────────────────────────
+
+  2-8. TB_DEPLOY_MODEL (배포 모델 — AI 운영소용)
+  ─────────────────────────────────────────────────────────
+  컬럼명              타입              설명
+  ─────────────────────────────────────────────────────────
+  DEPLOY_ID           TEXT PK          UUID
+  MODEL_ID            TEXT FK          TB_MODEL 참조
+  PROJECT_ID          TEXT FK          TB_PROJECT 참조
+  DEPLOY_NM           TEXT             배포명
+  ENDPOINT_URL        TEXT             추론 엔드포인트 경로
+  VERSION             TEXT             버전 (v1.0, v1.1, ...)
+  IS_ACTIVE           INTEGER          활성 여부 (0/1)
+  DEPLOYED_AT         TEXT             배포일시
+  LAST_CALLED_AT      TEXT             최종 호출일시
+  CALL_COUNT          INTEGER          누적 호출 수
+  ─────────────────────────────────────────────────────────
+
+
+[3] 백엔드 API 설계
+================================================================================
+
+  ※ Base URL: http://localhost:8000
+  ※ 모든 응답: { "status": "ok"|"error", "data": {...}, "message": "..." }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  3-1. 프로젝트 관리 API
+  ─────────────────────────────────────────────────────────
+  POST   /api/project                 프로젝트 생성
+  GET    /api/project                 프로젝트 목록
+  GET    /api/project/{id}            프로젝트 상세
+  PUT    /api/project/{id}            프로젝트 수정
+  DELETE /api/project/{id}            프로젝트 삭제 (ARCHIVED)
+  ─────────────────────────────────────────────────────────
+
+  3-2. 데이터 관리 API
+  ─────────────────────────────────────────────────────────
+  POST   /api/data/upload             CSV/Excel 업로드 → 세션 저장
+  GET    /api/data/{project_id}       현재 세션 데이터 조회
+  POST   /api/data/save               세션 → DB 저장
+  POST   /api/data/load               DB → 세션 로드
+  DELETE /api/data/{project_id}       세션 데이터 삭제
+  ─────────────────────────────────────────────────────────
+
+  3-3. 전처리 API
+  ─────────────────────────────────────────────────────────
+  POST   /api/preprocess              전처리 실행 (6종)
+         body: { project_id, action, columns, params }
+         actions: delete_columns, missing_value, scaling,
+                  encoding, type_conversion, transpose
+
+  GET    /api/preprocess/log/{pid}    전처리 이력 조회
+  POST   /api/preprocess/undo/{pid}   전처리 되돌리기 (1단계)
+  ─────────────────────────────────────────────────────────
+
+  3-4. EDA API
+  ─────────────────────────────────────────────────────────
+  POST   /api/eda/statistics          기술 통계 산출
+  POST   /api/eda/correlation         상관분석 실행
+         ※ 차트 렌더링은 프론트에서 Canvas로 수행
+         ※ 백엔드는 계산 결과(수치)만 반환
+  ─────────────────────────────────────────────────────────
+
+  3-5. 모델링 API
+  ─────────────────────────────────────────────────────────
+  POST   /api/model/train             모델 학습
+         body: { project_id, model_type, target, features, params }
+         model_type: linear_reg, logistic_reg, decision_tree,
+                     kmeans, svm, random_forest, pca, mlr, knn
+
+  GET    /api/model/{project_id}      프로젝트 모델 목록
+  GET    /api/model/detail/{model_id} 모델 상세 (메트릭, 파라미터)
+  POST   /api/model/predict/{model_id} 모델 추론 (새 데이터)
+  DELETE /api/model/{model_id}        모델 삭제
+  POST   /api/model/deploy/{model_id} 모델 배포 (AI 운영소)
+  ─────────────────────────────────────────────────────────
+
+  3-6. 피처 스토어 API
+  ─────────────────────────────────────────────────────────
+  GET    /api/feature-store           데이터셋 목록
+  GET    /api/feature-store/{id}      데이터셋 상세 + 미리보기 (5행)
+  POST   /api/feature-store           데이터셋 등록
+  DELETE /api/feature-store/{id}      데이터셋 삭제
+  GET    /api/feature-store/{id}/download  CSV 다운로드
+  POST   /api/feature-store/{id}/load 피처스토어 → 세션으로 로드
+  ─────────────────────────────────────────────────────────
+
+  3-7. 배포/운영 API (AI 운영소)
+  ─────────────────────────────────────────────────────────
+  GET    /api/deploy                  배포 모델 목록
+  POST   /api/deploy/{model_id}       모델 배포
+  PUT    /api/deploy/{deploy_id}      배포 설정 수정
+  DELETE /api/deploy/{deploy_id}      배포 중지
+  POST   /api/deploy/{deploy_id}/predict  실시간 추론
+  GET    /api/deploy/{deploy_id}/stats    운영 통계
+  ─────────────────────────────────────────────────────────
+
+
+[4] 백엔드 모듈 구조
+================================================================================
+
+  backend/
+  ├── main.py                    FastAPI 앱 + 라우터 등록
+  ├── database.py                DB 연결 + 초기화 (기존 확장)
+  ├── config.py                  환경설정 (DB 경로, CORS 등)
+  │
+  ├── models/                    Pydantic 모델 (요청/응답)
+  │   ├── project.py             프로젝트 스키마
+  │   ├── data.py                데이터 스키마
+  │   ├── preprocess.py          전처리 스키마
+  │   ├── model.py               모델링 스키마
+  │   └── feature_store.py       피처스토어 스키마
+  │
+  ├── routers/                   API 라우터 분리
+  │   ├── project_router.py      /api/project
+  │   ├── data_router.py         /api/data
+  │   ├── preprocess_router.py   /api/preprocess
+  │   ├── eda_router.py          /api/eda
+  │   ├── model_router.py        /api/model
+  │   ├── feature_store_router.py /api/feature-store
+  │   └── deploy_router.py       /api/deploy
+  │
+  ├── services/                  비즈니스 로직
+  │   ├── session_manager.py     인메모리 DataFrame 관리
+  │   ├── preprocess_service.py  전처리 로직 (pandas)
+  │   ├── model_service.py       모델 학습/추론 (scikit-learn)
+  │   ├── eda_service.py         통계/상관분석 (numpy/scipy)
+  │   └── feature_store_service.py 피처스토어 CRUD
+  │
+  └── utils/
+      ├── column_mapper.py       물리↔논리 컬럼명 매핑
+      └── file_parser.py         CSV/Excel 파싱 (인코딩 처리)
+
+
+[5] 프론트엔드 ↔ 백엔드 연동 전략
+================================================================================
+
+  5-1. 데이터 흐름 (메인 시나리오)
+  ─────────────────────────────────────────────────────────
+
+  [사용자]                [프론트엔드]              [백엔드]              [DB]
+     │                      │                       │                   │
+     │── CSV 업로드 ────────→│                       │                   │
+     │                      │── POST /data/upload ──→│                   │
+     │                      │                       │── 파싱 → 세션 저장 │
+     │                      │←── {columns,rows} ────│                   │
+     │                      │── DataContext 반영 ──→ │                   │
+     │←── 테이블 표시 ───────│                       │                   │
+     │                      │                       │                   │
+     │── 전처리 실행 ────────→│                       │                   │
+     │                      │── POST /preprocess ───→│                   │
+     │                      │                       │── pandas 처리     │
+     │                      │←── {columns,rows} ────│                   │
+     │                      │── DataContext 반영 ──→ │                   │
+     │←── 테이블 갱신 ───────│                       │                   │
+     │                      │                       │                   │
+     │── 모델 학습 ──────────→│                       │                   │
+     │                      │── POST /model/train ──→│                   │
+     │                      │                       │── sklearn 학습    │
+     │                      │                       │── pickle 직렬화 ──→│── TB_MODEL 저장
+     │                      │←── {metrics,plots} ───│                   │
+     │←── 팝업 결과 표시 ────│                       │                   │
+     │                      │                       │                   │
+     │── DB 저장 ────────────→│                       │                   │
+     │                      │── POST /data/save ────→│                   │
+     │                      │                       │── 매핑 + INSERT ──→│── TB_DATA_ 저장
+     │                      │←── 저장 완료 ──────────│                   │
+
+
+  5-2. 연동 방식 결정
+  ─────────────────────────────────────────────────────────
+
+  구분              현재 (클라이언트)           변경 (서버 연동)
+  ─────────────────────────────────────────────────────────
+  CSV 파싱          프론트 FileReader           백엔드 pandas (유지 가능)
+  전처리            프론트 JavaScript            백엔드 pandas ★
+  EDA 계산          프론트 JavaScript            백엔드 numpy/scipy ★
+  EDA 차트          프론트 Canvas               프론트 Canvas (유지)
+  모델 학습         프론트 modelHelpers.js       백엔드 scikit-learn ★
+  결과 표시         프론트 window.open()         프론트 window.open() (유지)
+  데이터 저장       미구현                       백엔드 → SQLite ★
+  ─────────────────────────────────────────────────────────
+  ★ = 변경 필요
+
+  ※ 핵심 원칙: 계산은 백엔드, 렌더링은 프론트엔드
+  ※ CSV 파싱: 소규모 파일은 프론트도 가능하나, 대용량 대비 백엔드 권장
+
+
+  5-3. 프론트엔드 수정 범위
+  ─────────────────────────────────────────────────────────
+
+  파일                              수정 내용
+  ─────────────────────────────────────────────────────────
+  src/utils/api.js                 엔드포인트 추가 (project, deploy 등)
+  src/contexts/DataContext.js      API 호출 후 상태 반영 로직 추가
+  src/contexts/ProjectContext.js   프로젝트 CRUD API 연동
+  src/hooks/useDataOperations.js   전처리 → API 호출로 변경
+  src/components/controls/eda/*    EDA → API 호출로 변경 (차트는 유지)
+  src/components/controls/modeling/* 모델 → API 호출로 변경
+  src/pages/OperationsPage.jsx     배포 모델 API 연동
+  src/pages/FeatureStorePage.jsx   피처스토어 API 연동
+  ─────────────────────────────────────────────────────────
+
+
+[6] 구현 단계 (Phase)
+================================================================================
+
+  Phase A: DB 구축 (1~2일)
+  ─────────────────────────────────────────────────────────
+  A-1. database.py 확장 — 전체 테이블 DDL 작성 + init_db()
+  A-2. config.py 생성 — DB 경로, 환경변수 관리
+  A-3. column_mapper.py — 물리↔논리 매핑 유틸
+  A-4. 테이블 생성 + 시드 데이터 (피처스토어 5건)
+  ─────────────────────────────────────────────────────────
+
+  Phase B: 백엔드 리팩토링 (2~3일)
+  ─────────────────────────────────────────────────────────
+  B-1. main.py → 라우터 분리 (routers/ 디렉토리)
+  B-2. Pydantic 모델 정의 (models/ 디렉토리)
+  B-3. 세션 매니저 분리 (services/session_manager.py)
+  B-4. 전처리 서비스 분리 (services/preprocess_service.py)
+  B-5. 모델링 서비스 분리 (services/model_service.py)
+  ─────────────────────────────────────────────────────────
+
+  Phase C: API 완성 (2~3일)
+  ─────────────────────────────────────────────────────────
+  C-1. 프로젝트 CRUD API 구현
+  C-2. 데이터 업로드/저장/로드 API 완성
+  C-3. 전처리 API + 이력 저장
+  C-4. EDA API (통계, 상관분석)
+  C-5. 모델링 API + 모델 저장 (pickle)
+  C-6. 피처 스토어 CRUD API
+  C-7. 배포/운영 API (기본)
+  ─────────────────────────────────────────────────────────
+
+  Phase D: 프론트-백엔드 연동 (2~3일)
+  ─────────────────────────────────────────────────────────
+  D-1. api.js 엔드포인트 추가
+  D-2. 전처리 컨트롤 → API 호출로 전환
+  D-3. EDA 컨트롤 → API 호출 + Canvas 유지
+  D-4. 모델링 컨트롤 → API 호출로 전환
+  D-5. 피처 스토어 페이지 API 연동
+  D-6. AI 운영소 페이지 API 연동
+  D-7. 에러 핸들링 + 로딩 상태 UI
+  ─────────────────────────────────────────────────────────
+
+  Phase E: 테스트 & 마무리 (1~2일)
+  ─────────────────────────────────────────────────────────
+  E-1. 전체 시나리오 테스트 (업로드 → 전처리 → 학습 → 저장)
+  E-2. 에러 케이스 테스트 (빈 데이터, 잘못된 파라미터 등)
+  E-3. 프로덕션 빌드 + 인트라넷 배포 확인
+  E-4. 최종 점검 및 문서 정리
+  ─────────────────────────────────────────────────────────
+
+
+[7] 기술 스택 정리
+================================================================================
+
+  구분          라이브러리            버전       용도
+  ─────────────────────────────────────────────────────────
+  Backend       FastAPI              0.100+     API 서버
+                uvicorn              0.23+      ASGI 서버
+                pandas               2.0+       데이터 처리
+                numpy                1.24+      수치 계산
+                scikit-learn         1.3+       ML 알고리즘
+                scipy                1.11+      통계 분석
+                pickle (stdlib)      -          모델 직렬화
+                sqlite3 (stdlib)     -          개발 DB
+                cx_Oracle            8.3+       운영 DB (Oracle)
+
+  Frontend      React                19.x       UI 프레임워크
+                react-router-dom     7.x        라우팅
+                axios                1.x        HTTP 클라이언트
+                Canvas API           -          차트 렌더링
+  ─────────────────────────────────────────────────────────
+
+
+[8] 주요 설계 결정 사항
+================================================================================
+
+  Q1: 전처리를 프론트/백엔드 중 어디서?
+  → 백엔드 (pandas). 대용량 데이터 처리, 전처리 이력 DB 저장 가능.
+     프론트의 기존 클라이언트 전처리는 제거하고 API 호출로 대체.
+
+  Q2: EDA 차트를 어디서 렌더링?
+  → 프론트 (Canvas). 백엔드는 계산 결과(수치/배열)만 반환.
+     차트 렌더링은 인터랙티브한 프론트가 적합.
+
+  Q3: 모델을 어떻게 저장?
+  → pickle 직렬화 → BLOB으로 DB 저장.
+     모델 메타(파라미터, 메트릭)는 TEXT(JSON)으로 별도 저장.
+
+  Q4: 세션 데이터 관리?
+  → 인메모리 Dictionary (현재 방식 유지).
+     서버 재시작 시 데이터 소실되므로 DB 저장 기능 제공.
+     운영 환경에서는 Redis 또는 파일 시스템 고려.
+
+  Q5: Oracle 10g 호환 전략?
+  → SQLite로 개발 → DDL만 Oracle 문법으로 변환.
+     TEXT → VARCHAR2(4000), INTEGER → NUMBER, BLOB → BLOB 유지.
+     cx_Oracle 드라이버로 교체, database.py에 환경 분기 처리.
+
+================================================================================
+  END OF DOCUMENT
+================================================================================
